@@ -88,8 +88,8 @@ envguard detects and works with the following package managers:
 |---|---|---|
 | pip | Full | venv creation, dependency installation, freeze |
 | conda | Full | Environment creation, dependency installation |
-| mamba | Detection only | Detected as available, treated like conda |
-| uv | Detection only | Detected as available, not used for operations |
+| uv | Full | Preferred backend for resolution and installation when available |
+| mamba | Partial | Detected as available, treated like conda for operations |
 | pipx | Detection only | Detected as available |
 | poetry | Detection only | Environment type inferred from `poetry.lock` |
 

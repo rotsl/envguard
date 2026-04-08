@@ -49,11 +49,17 @@ The architecture prioritizes:
        │                                               │
        │  ┌──────────┐  ┌──────────┐  ┌────────────┐ │
        │  │ project/ │  │ resolver/│  │  update/   │ │
-       │  │ discovery│  │backends  │  │ updater    │ │
-       │  │ intent   │  │markers   │  │ manifest   │ │
-       │  │resolution│  │wheelcheck│  │ verifier   │ │
+       │  │ discovery│  │pypi_res. │  │ updater    │ │
+       │  │ intent   │  │uv_backend│  │ manifest   │ │
+       │  │resolution│  │pip/conda │  │ verifier   │ │
        │  │ lifecycle│  │inference │  │ rollback   │ │
-       │  └──────────┘  └──────────┘  └────────────┘ │
+       │  └──────────┘  │markers   │  └────────────┘ │
+       │                │wheelcheck│                  │
+       │  ┌──────────┐  └──────────┘  ┌────────────┐ │
+       │  │  lock/   │                │  publish/  │ │
+       │  │ manager  │  ┌──────────┐  │ builder    │ │
+       │  └──────────┘  │installer │  │ uploader   │ │
+       │                └──────────┘  └────────────┘ │
        └─────────────────┬───────────────────────────┘
                          │
        ┌─────────────────▼───────────────────────────┐
@@ -74,19 +80,31 @@ The architecture prioritizes:
 
 | Module | Responsibility |
 |---|---|
-| `cli.py` | Typer CLI application with 15 commands, error handling, Rich formatting |
+| `cli.py` | Typer CLI application with 25 commands across 6 groups, error handling, Rich formatting |
 | `doctor.py` | 10 diagnostic checks for host and project health |
 | `preflight.py` | Full preflight pipeline orchestration (9 steps) |
 | `detect.py` | Host system detection (OS, arch, Python, shell, network, permissions) |
 | `rules.py` | Rules engine evaluating 15+ preflight rules |
 | `repair.py` | Automated repair: environment recreation, ownership fixes, Python switching |
-| `models.py` | All data models: `HostFacts`, `ProjectIntent`, `ResolutionRecord`, `RuleFinding`, `PreflightResult`, `HealthReport`, enums |
-| `exceptions.py` | 18 custom exception classes with structured metadata |
+| `installer.py` | Package installation/uninstallation with backend auto-detection (uv > pip > conda) |
+| `state.py` | Atomic JSON state persistence for `.envguard/state.json` |
+| `models.py` | All data models: `HostFacts`, `ProjectIntent`, `ResolutionRecord`, `RuleFinding`, `ResolvedPackage`, `LockFile`, `InstallResult`, `PublishResult`, enums |
+| `exceptions.py` | Custom exception hierarchy (`EnvguardError` + 18 subclasses including `LockFileError`, `PublishError`) |
 | `logging.py` | Structured logging via `get_logger()` |
 | `project/discovery.py` | Scans project files to build `ProjectIntent` |
 | `project/intent.py` | Analyzes intent: accelerator targets, compatibility, recommendations |
 | `project/resolution.py` | Resolves Python version, package manager, env type, path, accelerator |
 | `project/lifecycle.py` | Full lifecycle: init, preflight, run, repair, health, freeze |
+| `resolver/pypi_resolver.py` | BFS dependency resolution via PyPI JSON API |
+| `resolver/uv_backend.py` | uv backend: wraps `uv pip compile` / `uv pip install` |
+| `resolver/pip_backend.py` | pip-based dependency resolution |
+| `resolver/conda_backend.py` | conda/mamba environment and dependency resolution |
+| `resolver/inference.py` | `infer_requirements()` and `infer_sources()` from project files |
+| `resolver/markers.py` | PEP 508 environment marker evaluation |
+| `resolver/wheelcheck.py` | Wheel platform and architecture compatibility checks |
+| `lock/manager.py` | `LockManager`: generate, read, write, sync `envguard.lock` (TOML) |
+| `publish/builder.py` | `Builder`: invoke `python -m build` to produce sdist + wheel |
+| `publish/uploader.py` | `Uploader`: upload artifacts via twine or direct urllib multipart POST |
 | `macos/permissions.py` | Permission checking: filesystem, network, subprocess, LaunchAgent |
 | `macos/paths.py` | macOS-specific path definitions |
 | `macos/rosetta.py` | Rosetta 2 translation detection |
@@ -278,7 +296,9 @@ EnvguardError
 ├── TrustError
 ├── InstallationError
 ├── HashAlgorithmError
-└── XcodeError
+├── XcodeError
+├── LockFileError
+└── PublishError
 ```
 
 ### Error handling principles
@@ -309,5 +329,7 @@ envguard uses specific exit codes to communicate the type of failure:
 | 10 | `EXIT_UPDATE_AVAILABLE` | Update is available |
 | 11 | `EXIT_ALREADY_UP_TO_DATE` | Already at latest version |
 | 12 | `EXIT_ROLLBACK_FAILED` | Rollback operation failed |
+| 13 | `EXIT_LOCK_STALE` | Lock file is missing or out of date |
+| 14 | `EXIT_PUBLISH_FAILED` | Package publish failed |
 
 Exit code 9 is intentionally skipped to avoid confusion with the Unix `SIGKILL` convention.

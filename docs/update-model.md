@@ -56,7 +56,7 @@ The update system is designed to be:
 
 6. **Apply** — Files from the staging directory are copied over the current envguard installation (located via `importlib.util.find_spec("envguard")`).
 
-7. **Post-update verification** — Not yet implemented in v0.1.0, but designed to run a quick import test after applying.
+7. **Post-update verification** — Not yet implemented in v1.0.1, but designed to run a quick import test after applying.
 
 8. **Rollback** — If any step fails after the snapshot was created, the snapshot can be restored via `envguard rollback <snapshot-id>`.
 
@@ -81,7 +81,7 @@ The remote manifest is a JSON document at `https://releases.envguard.dev/manifes
   "release_date": "2026-07-01",
   "prerelease": false,
   "size_bytes": 524288,
-  "package_url": "https://pypi.org/project/envguard/0.2.0/"
+  "package_url": "https://pypi.org/project/envguard-tool/0.2.0/"
 }
 ```
 

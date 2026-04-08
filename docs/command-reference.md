@@ -350,7 +350,7 @@ envguard freeze --output requirements-frozen.txt
 ```json
 {
   "created_at": "2026-07-15T10:30:00",
-  "envguard_version": "0.1.0",
+  "envguard_version": "1.0.1",
   "python_version": "3.12.0",
   "project_dir": "/path/to/project",
   "project_type": "pyproject",
@@ -693,3 +693,250 @@ envguard status --json
 |---|---|
 | 0 | Success |
 | 1 | Error |
+
+---
+
+## envguard shell-hook
+
+Output shell integration code suitable for use with `eval`.
+
+### Usage
+
+```
+envguard shell-hook [OPTIONS]
+```
+
+### Options
+
+| Option  | Short | Default       | Description                   |
+|---------|-------|---------------|-------------------------------|
+| `--shell` | `-s` | auto-detected | Shell type (`zsh` or `bash`) |
+
+### Examples
+
+```bash
+# Emit hook code for eval
+eval "$(envguard shell-hook)"
+
+# Emit for a specific shell
+eval "$(envguard shell-hook --shell zsh)"
+```
+
+---
+
+## envguard resolve
+
+Resolve project dependencies to pinned versions using the PyPI JSON API.
+
+### Usage
+
+```
+envguard resolve [PROJECT_DIR] [OPTIONS]
+```
+
+### Options
+
+| Option | Short | Default | Description |
+|---|---|---|---|
+| `PROJECT_DIR` | | `.` (cwd) | Project directory |
+| `--python` | `-p` | auto | Target Python version for resolution |
+| `--json` | `-j` | false | Output results as JSON |
+
+### Examples
+
+```bash
+# Resolve all project dependencies
+envguard resolve
+
+# Resolve for a specific Python version
+envguard resolve --python 3.12
+
+# JSON output (list of name==version)
+envguard resolve --json
+```
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Resolved successfully |
+| 1 | Resolution failed (dependency conflict, network error) |
+| 6 | Network unavailable |
+
+---
+
+## envguard install
+
+Install packages into the managed environment.
+
+### Usage
+
+```
+envguard install [PACKAGES...] [OPTIONS]
+```
+
+### Options
+
+| Option | Short | Default | Description |
+|---|---|---|---|
+| `PACKAGES...` | | (none) | Package specs to install (e.g., `requests>=2.28`) |
+| `--from-lock` | | false | Install all packages pinned in `envguard.lock` |
+| `--dev` | | false | Include dev/optional dependency groups |
+| `--dir` | `-d` | `.` (cwd) | Project directory |
+| `--json` | `-j` | false | Output results as JSON |
+
+### Examples
+
+```bash
+# Install packages listed in pyproject.toml
+envguard install
+
+# Install from lock file
+envguard install --from-lock
+
+# Install specific packages
+envguard install requests==2.31.0 numpy
+
+# Include dev dependencies
+envguard install --dev
+
+# JSON output
+envguard install --json
+```
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Installed successfully |
+| 1 | Installation failed |
+| 3 | Environment not found (run `envguard init`) |
+
+---
+
+## envguard lock
+
+Manage the `envguard.lock` file. Lock commands are sub-commands of `envguard lock`.
+
+### envguard lock generate
+
+Resolve dependencies and write `envguard.lock`.
+
+```bash
+envguard lock generate [PROJECT_DIR] [OPTIONS]
+```
+
+| Option | Description |
+|---|---|
+| `--python <version>` | Target Python version for resolution |
+| `--json` / `-j` | JSON output |
+
+```bash
+envguard lock generate
+envguard lock generate --python 3.11
+```
+
+### envguard lock update
+
+Re-resolve and refresh `envguard.lock`.
+
+```bash
+envguard lock update [PROJECT_DIR] [OPTIONS]
+```
+
+| Option | Description |
+|---|---|
+| `--package <name>` | Update a single package only |
+| `--json` / `-j` | JSON output |
+
+```bash
+# Update all
+envguard lock update
+
+# Update a single package
+envguard lock update --package requests
+```
+
+### envguard lock sync
+
+Install all packages exactly as pinned in `envguard.lock`.
+
+```bash
+envguard lock sync [PROJECT_DIR] [OPTIONS]
+```
+
+```bash
+envguard lock sync
+envguard lock sync --json
+```
+
+### envguard lock check
+
+Check whether `envguard.lock` is up-to-date. Exits with code 13 if stale.
+
+```bash
+envguard lock check [PROJECT_DIR] [OPTIONS]
+```
+
+```bash
+# Returns 0 if fresh, 13 if stale
+envguard lock check
+
+# Use in CI
+envguard lock check || echo "Lock file is stale — run: envguard lock generate"
+```
+
+### Lock sub-command exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Error (network failure, parse error) |
+| 13 | Lock file stale (`lock check` only) |
+
+---
+
+## envguard publish
+
+Build the project as a distribution (sdist + wheel) and upload to PyPI.
+
+### Usage
+
+```
+envguard publish [PROJECT_DIR] [OPTIONS]
+```
+
+### Options
+
+| Option | Short | Default | Description |
+|---|---|---|---|
+| `PROJECT_DIR` | | `.` (cwd) | Project directory to publish |
+| `--token` | | `$PYPI_TOKEN` env var | PyPI API token |
+| `--repository` | | PyPI | Upload repository URL |
+| `--dry-run` | | false | Build only, do not upload |
+| `--skip-build` | | false | Upload existing `dist/` artifacts |
+| `--json` | `-j` | false | Output results as JSON |
+
+### Examples
+
+```bash
+# Build and upload to PyPI
+envguard publish
+
+# Dry run (build only)
+envguard publish --dry-run
+
+# Upload to Test PyPI
+envguard publish --repository https://test.pypi.org/legacy/
+
+# Upload pre-built artifacts
+envguard publish --skip-build
+```
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Published successfully |
+| 1 | Build or upload failed |
+| 14 | Publish failed |

@@ -32,15 +32,15 @@ envguard welcomes contributions of all kinds: bug fixes, new features, documenta
 
 ```bash
 # Clone the repository
-git clone https://github.com/rohanr/envguard.git
+git clone https://github.com/rotsl/envguard.git
 cd envguard
 
-# Create a virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# Create the dev venv (guardenv/) and install with dev dependencies
+make install-guardenv
 
-# Install in editable mode with dev dependencies
-pip install -e ".[dev]"
+# Or manually:
+python3 -m venv guardenv
+guardenv/bin/pip install -e ".[dev]"
 ```
 
 ### Verify the setup
@@ -50,18 +50,18 @@ pip install -e ".[dev]"
 make test
 
 # Or directly
-pytest
+guardenv/bin/pytest
 
 # Run the CLI
-envguard --help
-envguard doctor
+guardenv/bin/envguard --help
+guardenv/bin/envguard doctor
 ```
 
 ### Makefile targets
 
 | Target | Command | Description |
 |---|---|---|
-| `make install` | `pip install -e .` | Install in editable mode |
+| `make install-guardenv` | `python3 -m venv guardenv && pip install -e .[dev]` | Create dev venv and install |
 | `make lint` | `ruff check src/ tests/` | Run linter |
 | `make format` | `ruff format src/ tests/` | Auto-format code |
 | `make typecheck` | `mypy src/` | Run type checker |
@@ -299,7 +299,7 @@ envguard follows [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Scopes
 
-Common scopes: `cli`, `doctor`, `detect`, `rules`, `repair`, `preflight`, `update`, `security`, `macos`, `launch`, `project`, `resolver`, `models`, `exceptions`, `logging`, `config`, `docs`, `ci`, `tests`.
+Common scopes: `cli`, `doctor`, `detect`, `rules`, `repair`, `preflight`, `update`, `security`, `macos`, `launch`, `project`, `resolver`, `lock`, `publish`, `installer`, `models`, `exceptions`, `logging`, `config`, `docs`, `ci`, `tests`.
 
 ### Examples
 
