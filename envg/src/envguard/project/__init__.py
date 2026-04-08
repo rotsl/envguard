@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Rohan R. All rights reserved.
+
+"""Project analysis and lifecycle sub-package."""

@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "envguard-tool"
+version = "1.0.1"
+description = "macOS-first Python environment orchestration framework — preflight validation, dependency resolution, lock files, and safe managed execution."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Rohan R" },
+]
+keywords = [
+    "python",
+    "environment",
+    "macos",
+    "orchestration",
+    "virtualenv",
+    "conda",
+    "preflight",
+    "dependency-management",
+    "lock-file",
+    "package-manager",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Software Development :: Build Tools",
+    "Environment :: Console",
+]
+
+dependencies = [
+    "typer[all]>=0.9",
+    "rich>=13.0",
+    "tomli>=2.0; python_version < '3.11'",
+    "tomli_w>=1.0",
+    "requests>=2.28",
+    "packaging>=23.0",
+    "pathspec>=0.11",
+    "build>=1.0",
+]
+
+[project.optional-dependencies]
+publish = [
+    "twine>=4.0",
+]
+
+[project.scripts]
+envguard = "envguard.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/rotsl/envguard"
+Repository = "https://github.com/rotsl/envguard"
+Issues = "https://github.com/rotsl/envguard/issues"
+Changelog = "https://github.com/rotsl/envguard/releases"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/envguard"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/envguard/**/*.py",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+]

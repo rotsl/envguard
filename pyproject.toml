@@ -153,8 +153,3 @@ exclude_lines = [
     "@abstractmethod",
     "@overload",
 ]
-
-[tool.uv.workspace]
-members = [
-    "envguard",
-]

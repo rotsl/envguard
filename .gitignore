@@ -154,5 +154,8 @@ guardenv/
 # envguard internal usage guide (not for distribution)
 envguard-usage-guide.md
 
-# scratch/test projects
-envg/
+# envg package build artifacts (rebuilt by CI — source is tracked)
+envg/dist/
+envg/.venv/
+envg/envguard_tool.egg-info/
+envg/build/

@@ -5,7 +5,9 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![macOS](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-informational.svg)](#platform-support)
-[![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange.svg)]()
+[![PyPI](https://img.shields.io/badge/PyPI-envguard--tool%201.0.1-blue)](https://test.pypi.org/project/envguard-tool/)
+[![CI](https://github.com/rotsl/envguard/actions/workflows/ci.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/ci.yml)
+[![Lint](https://github.com/rotsl/envguard/actions/workflows/lint.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/lint.yml)
 
 
 
@@ -14,33 +16,34 @@
 ## Table of Contents
 
 1. [What is envguard?](#what-is-envguard)
-2. [Platform Support](#platform-support)
-3. [Quick Start](#quick-start)
-4. [Installation](#installation)
+2. [PyPI Package](#pypi-package)
+3. [Platform Support](#platform-support)
+4. [Quick Start](#quick-start)
+5. [Installation](#installation)
     - [macOS](#installation--macos)
     - [Linux](#installation--linux)
     - [Windows](#installation--windows)
     - [From source (dev venv)](#installation--from-source-dev-venv)
-5. [Core Concepts](#core-concepts)
-6. [The Preflight Pipeline](#the-preflight-pipeline)
-7. [All Commands](#all-commands)
-8. [Configuration](#configuration)
-9. [Rules Engine](#rules-engine)
-10. [GPU Acceleration](#gpu-acceleration)
-11. [Shell Integration](#shell-integration)
-12. [LaunchAgent (macOS)](#launchagent-macos)
-13. [Self-Updating & Rollback](#self-updating--rollback)
-14. [Security Model](#security-model)
-15. [Snapshots & State](#snapshots--state)
-16. [Exit Codes](#exit-codes)
-17. [JSON Output Mode](#json-output-mode)
-18. [Repair System](#repair-system)
-19. [Project Structure](#project-structure)
-20. [Architecture](#architecture)
-21. [Development Workflow](#development-workflow)
-22. [Contributing](#contributing)
-23. [Limitations](#limitations)
-24. [License](#license)
+6. [Core Concepts](#core-concepts)
+7. [The Preflight Pipeline](#the-preflight-pipeline)
+8. [All Commands](#all-commands)
+9. [Configuration](#configuration)
+10. [Rules Engine](#rules-engine)
+11. [GPU Acceleration](#gpu-acceleration)
+12. [Shell Integration](#shell-integration)
+13. [LaunchAgent (macOS)](#launchagent-macos)
+14. [Self-Updating & Rollback](#self-updating--rollback)
+15. [Security Model](#security-model)
+16. [Snapshots & State](#snapshots--state)
+17. [Exit Codes](#exit-codes)
+18. [JSON Output Mode](#json-output-mode)
+19. [Repair System](#repair-system)
+20. [Project Structure](#project-structure)
+21. [Architecture](#architecture)
+22. [Development Workflow](#development-workflow)
+23. [Contributing](#contributing)
+24. [Limitations](#limitations)
+25. [License](#license)
 
 ---
 
@@ -86,6 +89,34 @@ If anything is wrong, execution is **blocked** with a clear, actionable error me
 
 ---
 
+## PyPI Package
+
+| | |
+|---|---|
+| **Package name** | `envguard-tool` |
+| **CLI command** | `envguard` |
+| **Version** | `1.0.1` |
+| **Registry** | [Test PyPI](https://test.pypi.org/project/envguard-tool/) |
+| **Python** | 3.10+ |
+| **License** | Apache 2.0 |
+
+```bash
+# Install from Test PyPI
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ envguard-tool
+
+# Install a specific version
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ envguard-tool==1.0.1
+
+# Once on PyPI (coming soon)
+pip install envguard-tool
+```
+
+> **Note:** The installable package is named `envguard-tool` on PyPI. The CLI command after installation is `envguard`. This distinction exists because the name `envguard` was already taken on PyPI.
+
+The package source lives in [`envg/`](envg/) within this repository. The `envg/` directory is the canonical publishable artifact — its `pyproject.toml`, `README.md`, and source mirror the main project.
+
+---
+
 ## Platform Support
 
 | Platform | Support level | Notes |
@@ -108,8 +139,11 @@ If anything is wrong, execution is **blocked** with a clear, actionable error me
 ## Quick Start
 
 ```bash
-# Install
-pip install envguard
+# Install from PyPI (package name: envguard-tool, CLI command: envguard)
+pip install envguard-tool
+
+# Or from Test PyPI
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ envguard-tool
 
 # Initialize your project
 cd /path/to/your/project
@@ -134,17 +168,17 @@ envguard run -- jupyter lab
 - Xcode Command Line Tools (recommended): `xcode-select --install`
 
 ```bash
-# Option 1: pip (PyPI)
-pip install envguard
+# Option 1: pip (PyPI — package name is envguard-tool, CLI command is envguard)
+pip install envguard-tool
 
 # Option 2: with Homebrew Python
 brew install python@3.12
-python3 -m pip install envguard
+python3 -m pip install envguard-tool
 
 # Option 3: with pyenv
 pyenv install 3.12.0
 pyenv global 3.12.0
-pip install envguard
+pip install envguard-tool
 
 # Verify
 envguard --version
@@ -183,15 +217,15 @@ bash scripts/bootstrap.sh --yes  # non-interactive (accept all prompts)
 ```bash
 # Ubuntu / Debian
 sudo apt-get install python3 python3-pip python3-venv
-pip install envguard
+pip install envguard-tool
 
 # Fedora / RHEL
 sudo dnf install python3 python3-pip
-pip install envguard
+pip install envguard-tool
 
 # Arch Linux
 sudo pacman -S python python-pip
-pip install envguard
+pip install envguard-tool
 
 # Verify
 envguard --version
@@ -656,7 +690,7 @@ Trusted:      envguard codebase · Python runtime · macOS/Linux system APIs
 
 ### Security recommendations
 
-1. **Pin the version** — `pip install envguard==0.1.0` rather than `pip install envguard`
+1. **Pin the version** — `pip install envguard-tool==1.0.1` rather than `pip install envguard`
 2. **Disable updates in locked environments** — set `channel = "off"` in config
 3. **Review shell RC changes** — inspect `~/.zshrc` or `~/.bashrc` after `install-shell-hooks`
 4. **Review the LaunchAgent plist** — inspect `~/Library/LaunchAgents/com.envguard.update.plist` after installation
