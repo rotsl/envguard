@@ -386,3 +386,108 @@ class HealthReport:
     outdated_packages: list[str] = field(default_factory=list)
     checks: dict[str, tuple[bool, str]] = field(default_factory=dict)
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+# ---------------------------------------------------------------------------
+# Dependency resolution and lock file models
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ResolvedPackage:
+    """A single fully-pinned package produced by the dependency resolver.
+
+    Attributes:
+        name: Canonical (normalised) package name.
+        version: Pinned version string (e.g. ``"2.31.0"``).
+        normalized_name: Same as *name* — lowercase, hyphens.
+        specifier: Full pinned specifier (e.g. ``"requests==2.31.0"``).
+        requires_dist: Raw ``requires_dist`` strings from PyPI metadata.
+        requires_python: ``requires_python`` constraint from metadata.
+        yanked: Whether this version was yanked on PyPI.
+        source: Where this package was resolved from (``"pypi"`` by default).
+        extras: Extras that were requested (e.g. ``["security"]``).
+        markers: Environment marker string, if applicable.
+        resolved_at: ISO-8601 timestamp of when the package was resolved.
+    """
+
+    name: str = ""
+    version: str = ""
+    normalized_name: str = ""
+    specifier: str = ""
+    requires_dist: list[str] = field(default_factory=list)
+    requires_python: str | None = None
+    yanked: bool = False
+    source: str = "pypi"
+    extras: list[str] = field(default_factory=list)
+    markers: str | None = None
+    resolved_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+@dataclass
+class LockFile:
+    """In-memory representation of an ``envguard.lock`` file.
+
+    Attributes:
+        envguard_version: Version of envguard that generated this lock.
+        generated_at: ISO-8601 timestamp of generation.
+        python_requires: Python version constraint for the project.
+        content_hash: SHA-256 of the input source files (detects staleness).
+        packages: Fully-pinned package list.
+        sources: Relative paths of source files used during resolution.
+        extra: Arbitrary extra metadata.
+    """
+
+    envguard_version: str = ""
+    generated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    python_requires: str | None = None
+    content_hash: str = ""
+    packages: list[ResolvedPackage] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
+    extra: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class InstallResult:
+    """Result of an ``envguard install`` operation.
+
+    Attributes:
+        ok: Whether the operation succeeded.
+        backend: Package manager used (``"pip"``, ``"uv"``, ``"conda"``, ``"mamba"``).
+        packages_installed: Names of successfully installed packages.
+        packages_failed: Names of packages that failed to install.
+        warnings: Non-fatal warning messages.
+        stdout: Captured standard output from the backend.
+        stderr: Captured standard error from the backend.
+        elapsed_seconds: Wall-clock time in seconds.
+    """
+
+    ok: bool = False
+    backend: str = ""
+    packages_installed: list[str] = field(default_factory=list)
+    packages_failed: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    stdout: str = ""
+    stderr: str = ""
+    elapsed_seconds: float = 0.0
+
+
+@dataclass
+class PublishResult:
+    """Result of an ``envguard publish`` operation.
+
+    Attributes:
+        ok: Whether the operation succeeded.
+        artifacts: Paths to the built distribution files.
+        uploaded: Filenames that were successfully uploaded.
+        repository_url: Target repository upload URL.
+        method: Upload method used (``"twine"`` or ``"urllib"``).
+        error: Error message if the operation failed.
+    """
+
+    ok: bool = False
+    artifacts: list[str] = field(default_factory=list)
+    uploaded: list[str] = field(default_factory=list)
+    repository_url: str = "https://upload.pypi.org/legacy/"
+    method: str = ""
+    error: str | None = None

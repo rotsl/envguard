@@ -172,3 +172,21 @@ class XcodeError(EnvguardError):
     def __init__(self, message: str = "") -> None:
         msg = message or "Xcode or Command Line Tools error."
         super().__init__(msg)
+
+
+class LockFileError(EnvguardError):
+    """Raised when the lock file is missing, corrupt, or stale."""
+
+    def __init__(self, message: str = "") -> None:
+        msg = message or "Lock file error."
+        super().__init__(msg)
+
+
+class PublishError(EnvguardError):
+    """Raised when a build or upload operation fails."""
+
+    def __init__(self, operation: str = "", reason: str = "", message: str = "") -> None:
+        self.operation = operation
+        self.reason = reason
+        msg = message or f"Publish operation '{operation}' failed: {reason}"
+        super().__init__(msg)

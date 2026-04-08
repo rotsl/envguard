@@ -1379,6 +1379,491 @@ def _generate_launch_agent_plist() -> str:
 
 
 # ======================================================================
+# Dependency resolution, installation, lock management, publish
+# ======================================================================
+
+# Lock sub-app
+lock_app = typer.Typer(name="lock", help="Lock file management.", no_args_is_help=True)
+app.add_typer(lock_app, name="lock")
+
+
+@app.command()
+def resolve(
+    project_dir: Path = typer.Argument(
+        Path.cwd(),
+        help="Project directory",
+    ),
+    extra: list[str] = typer.Option(
+        [],
+        "--extra",
+        "-e",
+        help="Include optional dependency group (repeatable)",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Write resolved packages to a requirements file",
+    ),
+    json_output: bool = json_output_option,
+) -> None:
+    """Resolve project dependencies to a fully-pinned set via the PyPI JSON API."""
+    try:
+        project_dir = resolve_project_dir(project_dir)
+
+        from envguard.resolver.inference import InferenceEngine
+        from envguard.resolver.pypi_resolver import PyPIResolver
+
+        engine = InferenceEngine()
+        requirements = engine.infer_requirements(project_dir, extras=list(extra))
+
+        if not requirements:
+            msg = "No requirements found in project."
+            if json_output:
+                output_json({"ok": False, "message": msg})
+            else:
+                console.print(f"[yellow]{msg}[/yellow]")
+            raise typer.Exit(EXIT_OK)
+
+        console.print(f"[dim]Resolving {len(requirements)} requirement(s)...[/dim]")
+        resolver = PyPIResolver()
+        packages = resolver.resolve(requirements)
+
+        if json_output:
+            output_json(
+                {
+                    "ok": True,
+                    "count": len(packages),
+                    "packages": [{"name": p.name, "version": p.version} for p in packages],
+                }
+            )
+        else:
+            table = Table(title="Resolved packages", border_style="cyan")
+            table.add_column("Package", style="bold")
+            table.add_column("Version", style="green")
+            table.add_column("Source")
+            for pkg in sorted(packages, key=lambda p: p.name):
+                table.add_row(pkg.name, pkg.version, pkg.source)
+            console.print(table)
+            console.print(f"\n[green]Resolved {len(packages)} packages[/green]")
+
+        if output is not None:
+            lines = [f"{p.specifier}\n" for p in sorted(packages, key=lambda p: p.name)]
+            output.write_text("".join(lines), encoding="utf-8")
+            if not json_output:
+                console.print(f"[dim]Written to {output}[/dim]")
+
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        raise typer.Exit(handle_error(exc, json_output)) from exc
+
+
+@app.command()
+def install(
+    packages: list[str] = typer.Argument(
+        None,
+        help="Packages to install (omit to install from lock file or project deps)",
+    ),
+    project_dir: Path = typer.Option(
+        Path.cwd(),
+        "--dir",
+        "-d",
+        help="Project directory",
+    ),
+    from_lock: bool = typer.Option(
+        False,
+        "--from-lock",
+        help="Install from envguard.lock",
+    ),
+    dev: bool = typer.Option(
+        False,
+        "--dev",
+        help="Include dev/optional dependencies",
+    ),
+    env_path: Path | None = typer.Option(
+        None,
+        "--env",
+        help="Path to the virtual environment",
+    ),
+    json_output: bool = json_output_option,
+) -> None:
+    """Install packages into the active environment."""
+    try:
+        project_dir = resolve_project_dir(project_dir)
+
+        from envguard.installer import Installer
+
+        installer = Installer(project_dir, env_path=env_path)
+
+        if from_lock:
+            from envguard.lock.manager import LockManager
+
+            lm = LockManager(project_dir)
+            lock = lm.read()
+            pinned = [p.specifier for p in lock.packages]
+            console.print(f"[dim]Syncing {len(pinned)} packages from lock file...[/dim]")
+            result = installer.sync_from_lock(pinned)
+        elif packages:
+            console.print(f"[dim]Installing {len(packages)} package(s)...[/dim]")
+            result = installer.install(list(packages))
+        else:
+            # Install from project requirements
+            from envguard.resolver.inference import InferenceEngine
+
+            engine = InferenceEngine()
+            reqs = engine.infer_requirements(project_dir, extras=["dev"] if dev else [])
+            if not reqs:
+                console.print("[yellow]No requirements found in project.[/yellow]")
+                raise typer.Exit(EXIT_OK)
+            console.print(f"[dim]Installing {len(reqs)} requirement(s)...[/dim]")
+            result = installer.install(reqs)
+
+        if json_output:
+            output_json(
+                {
+                    "ok": result.ok,
+                    "backend": result.backend,
+                    "installed": result.packages_installed,
+                    "failed": result.packages_failed,
+                    "elapsed_seconds": result.elapsed_seconds,
+                }
+            )
+        else:
+            if result.ok:
+                console.print(
+                    Panel(
+                        f"  Backend  : {result.backend}\n"
+                        f"  Installed: {len(result.packages_installed)} package(s)\n"
+                        f"  Time     : {result.elapsed_seconds:.1f}s",
+                        title="[bold green]Install complete[/bold green]",
+                        border_style="green",
+                    )
+                )
+            else:
+                console.print(
+                    Panel(
+                        f"  Backend : {result.backend}\n"
+                        f"  Failed  : {', '.join(result.packages_failed) or 'unknown'}\n"
+                        + (f"  Stderr  : {result.stderr[:300]}" if result.stderr else ""),
+                        title="[bold red]Install failed[/bold red]",
+                        border_style="red",
+                    )
+                )
+                raise typer.Exit(EXIT_GENERAL_ERROR)
+
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        raise typer.Exit(handle_error(exc, json_output)) from exc
+
+
+@lock_app.command("generate")
+def lock_generate(
+    project_dir: Path = typer.Argument(
+        Path.cwd(),
+        help="Project directory",
+    ),
+    python: str | None = typer.Option(
+        None,
+        "--python",
+        help="Target Python version (e.g. 3.11)",
+    ),
+    json_output: bool = json_output_option,
+) -> None:
+    """Resolve all dependencies and write envguard.lock."""
+    try:
+        project_dir = resolve_project_dir(project_dir)
+
+        from envguard.lock.manager import LockManager
+        from envguard.resolver.inference import InferenceEngine
+
+        engine = InferenceEngine()
+        requirements = engine.infer_requirements(project_dir)
+        sources = engine.infer_sources(project_dir)
+
+        if not requirements:
+            console.print("[yellow]No requirements found in project.[/yellow]")
+            raise typer.Exit(EXIT_OK)
+
+        console.print(
+            f"[dim]Resolving {len(requirements)} requirement(s) from "
+            f"{len(sources)} source file(s)...[/dim]"
+        )
+
+        lm = LockManager(project_dir)
+        lock = lm.generate(requirements, sources=sources, python_version=python)
+
+        if json_output:
+            output_json(
+                {
+                    "ok": True,
+                    "packages": len(lock.packages),
+                    "lock_file": str(lm.lock_path),
+                    "content_hash": lock.content_hash,
+                }
+            )
+        else:
+            console.print(
+                Panel(
+                    f"  Packages : {len(lock.packages)}\n"
+                    f"  Sources  : {', '.join(sources) or 'none'}\n"
+                    f"  Written  : {lm.lock_path}",
+                    title="[bold green]Lock file generated[/bold green]",
+                    border_style="green",
+                )
+            )
+
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        raise typer.Exit(handle_error(exc, json_output)) from exc
+
+
+@lock_app.command("update")
+def lock_update(
+    project_dir: Path = typer.Argument(
+        Path.cwd(),
+        help="Project directory",
+    ),
+    package: str | None = typer.Option(
+        None,
+        "--package",
+        "-p",
+        help="Update only this package (omit to update all)",
+    ),
+    json_output: bool = json_output_option,
+) -> None:
+    """Re-resolve dependencies and update envguard.lock."""
+    try:
+        project_dir = resolve_project_dir(project_dir)
+
+        from envguard.lock.manager import LockManager
+        from envguard.resolver.inference import InferenceEngine
+
+        lm = LockManager(project_dir)
+
+        if package:
+            console.print(f"[dim]Updating {package}...[/dim]")
+            lock = lm.update_package(package)
+        else:
+            engine = InferenceEngine()
+            requirements = engine.infer_requirements(project_dir)
+            sources = engine.infer_sources(project_dir)
+            console.print(f"[dim]Re-resolving {len(requirements)} requirement(s)...[/dim]")
+            lock = lm.generate(requirements, sources=sources)
+
+        if json_output:
+            output_json({"ok": True, "packages": len(lock.packages)})
+        else:
+            console.print(f"[green]Lock file updated — {len(lock.packages)} packages[/green]")
+
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        raise typer.Exit(handle_error(exc, json_output)) from exc
+
+
+@lock_app.command("sync")
+def lock_sync(
+    project_dir: Path = typer.Argument(
+        Path.cwd(),
+        help="Project directory",
+    ),
+    env_path: Path | None = typer.Option(
+        None,
+        "--env",
+        help="Path to the virtual environment",
+    ),
+    json_output: bool = json_output_option,
+) -> None:
+    """Sync the environment to match envguard.lock exactly."""
+    try:
+        project_dir = resolve_project_dir(project_dir)
+
+        from envguard.installer import Installer
+        from envguard.lock.manager import LockManager
+
+        lm = LockManager(project_dir)
+        lock = lm.read()
+        pinned = [p.specifier for p in lock.packages]
+
+        console.print(f"[dim]Syncing environment to {len(pinned)} pinned packages...[/dim]")
+
+        installer = Installer(project_dir, env_path=env_path)
+        result = installer.sync_from_lock(pinned)
+
+        if json_output:
+            output_json(
+                {
+                    "ok": result.ok,
+                    "installed": result.packages_installed,
+                    "failed": result.packages_failed,
+                }
+            )
+        else:
+            if result.ok:
+                console.print(
+                    f"[green]Sync complete — {len(result.packages_installed)} installed[/green]"
+                )
+            else:
+                console.print(f"[red]Sync failed: {result.packages_failed}[/red]")
+                raise typer.Exit(EXIT_GENERAL_ERROR)
+
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        raise typer.Exit(handle_error(exc, json_output)) from exc
+
+
+@lock_app.command("check")
+def lock_check(
+    project_dir: Path = typer.Argument(
+        Path.cwd(),
+        help="Project directory",
+    ),
+    json_output: bool = json_output_option,
+) -> None:
+    """Check whether envguard.lock is up-to-date with project requirements."""
+    try:
+        from envguard import EXIT_LOCK_STALE
+        from envguard.lock.manager import LockManager
+        from envguard.resolver.inference import InferenceEngine
+
+        project_dir = resolve_project_dir(project_dir)
+        lm = LockManager(project_dir)
+
+        engine = InferenceEngine()
+        sources = engine.infer_sources(project_dir)
+        stale = lm.is_stale(sources)
+
+        if json_output:
+            output_json(
+                {
+                    "ok": not stale,
+                    "stale": stale,
+                    "lock_file": str(lm.lock_path),
+                    "exists": lm.lock_path.exists(),
+                }
+            )
+        else:
+            if stale:
+                console.print(
+                    "[yellow]Lock file is stale or missing. "
+                    "Run 'envguard lock generate' to update.[/yellow]"
+                )
+                raise typer.Exit(EXIT_LOCK_STALE)
+            else:
+                console.print("[green]Lock file is up-to-date.[/green]")
+
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        raise typer.Exit(handle_error(exc, json_output)) from exc
+
+
+@app.command()
+def publish(
+    project_dir: Path = typer.Argument(
+        Path.cwd(),
+        help="Project directory",
+    ),
+    repository: str = typer.Option(
+        "https://upload.pypi.org/legacy/",
+        "--repository",
+        "-r",
+        help="PyPI upload endpoint URL",
+    ),
+    token: str | None = typer.Option(
+        None,
+        "--token",
+        "-t",
+        envvar="PYPI_TOKEN",
+        help="PyPI API token (or set PYPI_TOKEN env var)",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Build artifacts but do not upload",
+    ),
+    skip_build: bool = typer.Option(
+        False,
+        "--skip-build",
+        help="Upload existing dist/ artifacts without rebuilding",
+    ),
+    sdist: bool = typer.Option(True, "--sdist/--no-sdist", help="Build source distribution"),
+    wheel: bool = typer.Option(True, "--wheel/--no-wheel", help="Build wheel"),
+    json_output: bool = json_output_option,
+) -> None:
+    """Build the package and publish it to PyPI."""
+    try:
+        from envguard import EXIT_PUBLISH_FAILED
+        from envguard.publish.builder import Builder
+        from envguard.publish.uploader import Uploader
+
+        project_dir = resolve_project_dir(project_dir)
+        builder = Builder(project_dir)
+
+        if skip_build:
+            artifacts = builder.list_artifacts()
+            if not artifacts:
+                console.print(
+                    f"[red]No artifacts found in {builder.dist_dir}. "
+                    "Remove --skip-build to build first.[/red]"
+                )
+                raise typer.Exit(EXIT_PUBLISH_FAILED)
+            console.print(f"[dim]Using {len(artifacts)} existing artifact(s).[/dim]")
+        else:
+            console.print("[dim]Building package...[/dim]")
+            artifacts = builder.build(sdist=sdist, wheel=wheel)
+
+        artifact_names = [a.name for a in artifacts]
+
+        if dry_run:
+            if json_output:
+                output_json({"ok": True, "dry_run": True, "artifacts": artifact_names})
+            else:
+                console.print(
+                    Panel(
+                        "\n".join(f"  {n}" for n in artifact_names),
+                        title="[bold cyan]Dry run — artifacts built (not uploaded)[/bold cyan]",
+                        border_style="cyan",
+                    )
+                )
+            raise typer.Exit(EXIT_OK)
+
+        console.print(f"[dim]Uploading {len(artifacts)} artifact(s) to {repository}...[/dim]")
+        uploader = Uploader(repository_url=repository, token=token)
+        result = uploader.upload(artifacts)
+
+        if json_output:
+            output_json(
+                {
+                    "ok": result.ok,
+                    "artifacts": result.artifacts,
+                    "uploaded": result.uploaded,
+                    "repository_url": result.repository_url,
+                    "method": result.method,
+                }
+            )
+        else:
+            console.print(
+                Panel(
+                    f"  Artifacts : {', '.join(result.uploaded)}\n"
+                    f"  Repository: {result.repository_url}\n"
+                    f"  Method    : {result.method}",
+                    title="[bold green]Published successfully[/bold green]",
+                    border_style="green",
+                )
+            )
+
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        raise typer.Exit(handle_error(exc, json_output)) from exc
+
+
+# ======================================================================
 # Entry point
 # ======================================================================
 

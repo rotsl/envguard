@@ -36,9 +36,13 @@ dependencies = [
     "requests>=2.28",
     "packaging>=23.0",
     "pathspec>=0.11",
+    "build>=1.0",
 ]
 
 [project.optional-dependencies]
+publish = [
+    "twine>=4.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov",
@@ -46,6 +50,7 @@ dev = [
     "mypy>=1.0",
     "ruff>=0.1",
     "types-requests",
+    "responses>=0.25",
 ]
 
 [project.scripts]
@@ -124,6 +129,7 @@ ignore_missing_imports = true
 module = [
     "envguard.resolver.inference",
     "envguard.project.discovery",
+    "envguard.lock.manager",
 ]
 warn_unused_ignores = false
 
@@ -146,4 +152,9 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "@abstractmethod",
     "@overload",
+]
+
+[tool.uv.workspace]
+members = [
+    "envguard",
 ]

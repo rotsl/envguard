@@ -8,6 +8,8 @@ from envguard.resolver.conda_backend import CondaBackend
 from envguard.resolver.inference import InferenceEngine
 from envguard.resolver.markers import MarkerEvaluator
 from envguard.resolver.pip_backend import PipBackend
+from envguard.resolver.pypi_resolver import PyPIResolver
+from envguard.resolver.uv_backend import UvBackend
 from envguard.resolver.wheelcheck import WheelChecker
 
 __all__ = [
@@ -16,5 +18,7 @@ __all__ = [
     "InferenceEngine",
     "MarkerEvaluator",
     "PipBackend",
+    "PyPIResolver",
+    "UvBackend",
     "WheelChecker",
 ]

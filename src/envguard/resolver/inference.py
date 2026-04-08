@@ -456,6 +456,46 @@ class InferenceEngine:
 
         return merged
 
+    def infer_requirements(self, project_dir: Path, extras: list[str] | None = None) -> list[str]:
+        """Return a flat list of PEP 508 requirement strings for *project_dir*.
+
+        Args:
+            project_dir: Project root directory.
+            extras: Optional dependency group names to include (e.g. ``["dev"]``).
+
+        Returns:
+            Deduplicated list of requirement strings.
+        """
+        merged = self.infer_all(project_dir)
+        reqs: list[str] = list(merged.get("dependencies", []))
+        if extras:
+            extra_groups: dict[str, list[str]] = merged.get("extras", {})
+            for group in extras:
+                reqs.extend(extra_groups.get(group, []))
+        # Also include pip_deps from conda environment files
+        reqs.extend(merged.get("pip_deps", []))
+        # Deduplicate preserving order
+        seen: set[str] = set()
+        result: list[str] = []
+        for r in reqs:
+            key = _extract_package_name(r).lower()
+            if key and key not in seen:
+                seen.add(key)
+                result.append(r)
+        return result
+
+    def infer_sources(self, project_dir: Path) -> list[str]:
+        """Return relative paths of project files that contribute to requirements.
+
+        Args:
+            project_dir: Project root directory.
+
+        Returns:
+            List of relative file path strings (e.g. ``["pyproject.toml"]``).
+        """
+        merged = self.infer_all(project_dir)
+        return list(merged.get("sources", []))
+
     def detect_accelerator_need(self, dependencies: list[str]) -> dict:
         """Analyse *dependencies* to determine GPU / accelerator needs.
 

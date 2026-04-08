@@ -35,6 +35,8 @@ EXIT_CONFIG_ERROR = 8
 EXIT_UPDATE_AVAILABLE = 10
 EXIT_ALREADY_UP_TO_DATE = 11
 EXIT_ROLLBACK_FAILED = 12
+EXIT_LOCK_STALE = 13
+EXIT_PUBLISH_FAILED = 14
 
 # ---------------------------------------------------------------------------
 # Constants
