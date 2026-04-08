@@ -1,0 +1,8 @@
+name: cuda-demo
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pytorch>=2.0
+  - pip

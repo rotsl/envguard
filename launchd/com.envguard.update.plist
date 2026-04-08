@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.envguard.update</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/envguard</string>
+        <string>update</string>
+        <string>--check</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>86400</integer>
+    <key>WorkingDirectory</key>
+    <string>$HOME</string>
+    <key>StandardOutPath</key>
+    <string>$HOME/.envguard/logs/update-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>$HOME/.envguard/logs/update-stderr.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>$HOME</string>
+    </dict>
+</dict>
+</plist>
