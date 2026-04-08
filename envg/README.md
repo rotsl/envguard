@@ -237,7 +237,6 @@ envguard lock check --json
 | 11 | Already up to date |
 | 12 | Rollback failed |
 | 13 | Lock file stale |
-| 14 | Publish failed |
 
 ---
 
