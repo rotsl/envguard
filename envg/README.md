@@ -129,6 +129,27 @@ envguard install --from-lock
 
 ### Publishing
 
+**Publishing** means building a Python distribution (wheel and source archive) from a project's `pyproject.toml` and uploading those artifacts to a package registry such as [PyPI](https://pypi.org) or [Test PyPI](https://test.pypi.org). Once published, the package can be installed by anyone using `pip install <package-name>`.
+
+`envguard publish` automates this two-step process — `build` creates the distribution files in `dist/`, and `twine` uploads them to the registry. A [PyPI API token](https://pypi.org/help/#apitoken) is required for upload.
+
+```bash
+# Build and upload to PyPI (prompts for token if PYPI_TOKEN is not set)
+envguard publish
+
+# Dry run: build only, do not upload
+envguard publish --dry-run
+
+# Publish to Test PyPI instead of the default registry
+envguard publish --repository https://test.pypi.org/legacy/
+
+# Provide token directly (alternative to PYPI_TOKEN env var)
+envguard publish --token pypi-...
+
+# Upload pre-built artifacts already in dist/ (skip the build step)
+envguard publish --skip-build
+```
+
 | Command | Flags | Description |
 |---|---|---|
 | `envguard publish` | | Build and upload to PyPI |

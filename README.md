@@ -113,7 +113,7 @@ pip install envguard-tool
 
 > **Note:** The installable package is named `envguard-tool` on PyPI. The CLI command after installation is `envguard`. This distinction exists because the name `envguard` was already taken on PyPI.
 
-The package source lives in [`envg/`](envg/) within this repository. The `envg/` directory is the canonical publishable artifact — its `pyproject.toml`, `README.md`, and source mirror the main project.
+The package source lives in [`envg/`](envg/) within this repository. The `envg/` directory is the canonical publishable artifact — its `pyproject.toml`, `README.md`, and source are what get built and uploaded to PyPI when a new release is made. "Publishing" means running `python -m build` inside `envg/` to produce wheel and source-archive files, then uploading those files to PyPI with `twine`. See [Development Workflow — Publishing a release](#publishing-a-release) for the step-by-step process.
 
 ---
 
@@ -984,6 +984,32 @@ cd examples/mps-intent
 guardenv/bin/envguard init
 guardenv/bin/envguard preflight
 ```
+
+### Publishing a release
+
+**Publishing** means building a Python wheel and source archive from the [`envg/`](envg/) directory and uploading them to PyPI so users can install the package with `pip install envguard-tool`.
+
+The `envg/` directory contains a self-contained `pyproject.toml`, `README.md`, and source tree — it is the artifact that gets published. The root `pyproject.toml` is for development only and is never uploaded.
+
+```bash
+# 1. Install build and publish tools (from the envg/ optional-dependency group)
+pip install "envg/[publish]"   # installs build + twine
+
+# 2. Build the distribution (wheel + source archive) from envg/
+cd envg
+python -m build
+# Produces: dist/envguard_tool-<version>-py3-none-any.whl
+#           dist/envguard_tool-<version>.tar.gz
+
+# 3. Upload to Test PyPI first (for validation)
+twine upload --repository testpypi dist/*
+
+# 4. Upload to the real PyPI
+twine upload dist/*
+# Requires a PyPI API token: set TWINE_PASSWORD or pass --password
+```
+
+A [PyPI API token](https://pypi.org/help/#apitoken) is required for upload. Set `TWINE_PASSWORD` (or `PYPI_TOKEN` if using `envguard publish`) in your environment before running the upload step. Never commit tokens to source control.
 
 ### Test structure
 
