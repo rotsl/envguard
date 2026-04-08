@@ -51,10 +51,6 @@ dependencies = [
     "build>=1.0",
 ]
 
-[project.optional-dependencies]
-publish = [
-    "twine>=4.0",
-]
 
 [project.scripts]
 envguard = "envguard.cli:app"
