@@ -164,7 +164,7 @@ envguard install --from-lock
 # Do not edit manually. Regenerate with: envguard lock generate
 
 [metadata]
-envguard_version = "1.0.0"
+envguard_version = "1.0.1"
 generated_at = "2026-04-08T12:00:00+00:00"
 python_requires = ">=3.10"
 content_hash = "sha256:abc123..."
