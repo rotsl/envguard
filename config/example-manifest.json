@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "download_url": "https://github.com/example/envguard/releases/download/v0.2.0/envguard-0.2.0.tar.gz",
+    "changelog": "Added: MPS detection, improved Rosetta handling\nFixed: Permission detection on macOS Sonoma",
+    "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "checksum_algorithm": "sha256",
+    "min_python_version": "3.10",
+    "platforms": ["darwin", "linux"],
+    "signature": "",
+    "release_date": "2026-04-01T00:00:00Z",
+    "prerelease": false,
+    "size_bytes": 524288,
+    "package_url": "https://pypi.org/project/envguard/0.2.0/"
+}

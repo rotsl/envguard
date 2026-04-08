@@ -1,0 +1,13 @@
+name: broken-mixed-demo
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy>=1.24
+  - pandas>=2.0
+  - scikit-learn>=1.2
+  - pip
+  - pip:
+    - flask>=2.0
+    - click>=8.0

@@ -1,0 +1,3 @@
+torch>=2.0
+# NOTE: This project uses CUDA which is NOT supported on macOS.
+# envguard should detect this and provide remediation.

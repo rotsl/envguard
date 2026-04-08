@@ -1,0 +1,33 @@
+[general]
+auto_preflight = true
+log_level = "INFO"
+report_format = "text"  # text or json
+
+[preflight]
+check_network = true
+check_permissions = true
+check_python = true
+check_dependencies = true
+check_accelerator = true
+smoke_test_imports = true
+fail_on_unsupported = true
+
+[update]
+channel = "stable"  # stable, beta, off
+auto_check = true
+check_interval_hours = 24
+dry_run = false
+
+[environment]
+default_python_version = "3.11"
+prefer_conda = false
+venv_strategy = "isolated"  # isolated, shared
+
+[repair]
+auto_repair = false
+max_repair_attempts = 3
+backup_before_repair = true
+
+[accelerator]
+supported_targets = ["cpu", "mps"]
+reject_cuda_on_macos = true
