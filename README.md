@@ -9,6 +9,8 @@
 [![CI](https://github.com/rotsl/envguard/actions/workflows/ci.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/ci.yml)
 [![Lint](https://github.com/rotsl/envguard/actions/workflows/lint.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/lint.yml)
 
+[![DOI](https://zenodo.org/badge/1203981698.svg)](https://doi.org/10.5281/zenodo.19473644)
+
 ---
 
 ## Table of Contents
