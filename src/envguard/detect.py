@@ -59,9 +59,7 @@ def _run(
             f"Command timed out after {timeout}s: {' '.join(cmd)}"
         ) from exc
     except OSError as exc:
-        raise EnvguardError(
-            f"OS error running {' '.join(cmd)}: {exc}"
-        ) from exc
+        raise EnvguardError(f"OS error running {' '.join(cmd)}: {exc}") from exc
 
 
 # ── HostDetector ───────────────────────────────────────────────────────────
@@ -144,8 +142,12 @@ class HostDetector:
         facts.home_writable = perm.get("home_writable", False)
         facts.permissions_notes = perm.get("notes", [])
 
-        logger.info("Host detection complete: %s %s, Python %s",
-                     facts.os_name, facts.architecture.value, facts.python_version)
+        logger.info(
+            "Host detection complete: %s %s, Python %s",
+            facts.os_name,
+            facts.architecture.value,
+            facts.python_version,
+        )
         return facts
 
     def gather_facts(self, project_dir: Path | None = None) -> HostFacts:
@@ -210,7 +212,9 @@ class HostDetector:
 
             logger.debug(
                 "Architecture: %s, apple_silicon=%s, rosetta=%s",
-                arch.value, is_apple_silicon, is_rosetta,
+                arch.value,
+                is_apple_silicon,
+                is_rosetta,
             )
             return arch, is_apple_silicon, is_rosetta
         except Exception as exc:
@@ -254,19 +258,18 @@ class HostDetector:
 
             # Architecture of the binary
             try:
-                proc = _run([python_path, "-c",
-                             "import platform; print(platform.machine())"],
-                            timeout=10)
+                proc = _run(
+                    [python_path, "-c", "import platform; print(platform.machine())"], timeout=10
+                )
                 exe_arch = proc.stdout.strip().lower()
                 host_arch = platform.machine().lower()
-                info["is_native"] = (exe_arch == host_arch)
+                info["is_native"] = exe_arch == host_arch
             except EnvguardError:
                 pass
 
             # venv module check
             try:
-                proc = _run([python_path, "-m", "venv", "--help"],
-                            timeout=10)
+                proc = _run([python_path, "-m", "venv", "--help"], timeout=10)
                 info["has_venv"] = proc.returncode == 0
             except EnvguardError:
                 pass
@@ -433,9 +436,7 @@ class HostDetector:
                 proj_writable = os.access(proj, os.W_OK)
                 result["project_dir_writable"] = proj_writable
                 if not proj_writable:
-                    result["notes"].append(
-                        f"Project directory is not writable: {proj}"
-                    )
+                    result["notes"].append(f"Project directory is not writable: {proj}")
                 # Also check if we can create files in it
                 test_file = proj / ".envguard_permission_test"
                 try:
@@ -443,13 +444,9 @@ class HostDetector:
                     test_file.unlink(missing_ok=True)
                 except OSError:
                     result["project_dir_writable"] = False
-                    result["notes"].append(
-                        f"Cannot create files in project directory: {proj}"
-                    )
+                    result["notes"].append(f"Cannot create files in project directory: {proj}")
             except OSError as exc:
-                result["notes"].append(
-                    f"Cannot check project dir permissions: {exc}"
-                )
+                result["notes"].append(f"Cannot check project dir permissions: {exc}")
 
         logger.debug("Permission checks: %s", result)
         return result

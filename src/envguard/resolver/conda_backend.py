@@ -21,9 +21,11 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import FindingSeverity, RuleFinding
 except ImportError:
+
     class FindingSeverity:  # type: ignore[no-redef]
         ERROR = "error"
         WARNING = "warning"
@@ -34,6 +36,7 @@ except ImportError:
             self.rule = rule
             self.message = message
             self.severity = severity
+
 
 logger = get_logger(__name__)
 
@@ -153,9 +156,7 @@ class CondaBackend(BaseResolver):
 
         # Try ``conda verify`` (may not exist in all conda variants)
         try:
-            proc = self._run_conda(
-                ["verify", str(env_path)], check=False
-            )
+            proc = self._run_conda(["verify", str(env_path)], check=False)
             if proc.returncode != 0 and proc.stderr.strip():
                 for line in proc.stderr.strip().splitlines():
                     if line.strip():
@@ -194,11 +195,7 @@ class CondaBackend(BaseResolver):
         try:
             proc = self._run_conda(args, check=False)
             if proc.returncode == 0:
-                return [
-                    line.strip()
-                    for line in proc.stdout.splitlines()
-                    if line.strip()
-                ]
+                return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
         except OSError:
             logger.debug("conda env export failed for %s", env_path)
         return []

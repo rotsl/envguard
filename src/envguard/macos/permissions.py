@@ -62,9 +62,7 @@ class PermissionChecker:
             if not path.exists():
                 target = path.parent
                 if not target.exists():
-                    self._logger.debug(
-                        "Write check: path and parent do not exist: %s", path
-                    )
+                    self._logger.debug("Write check: path and parent do not exist: %s", path)
                     return PermissionStatus.DENIED
 
             if os.access(target, os.W_OK):
@@ -260,22 +258,16 @@ class PermissionChecker:
 
         # LaunchAgent write
         facts.launch_agent_write = self.check_launch_agent_write()
-        self._logger.info(
-            "LaunchAgent write: %s", facts.launch_agent_write.value
-        )
+        self._logger.info("LaunchAgent write: %s", facts.launch_agent_write.value)
 
         # Subprocess execution
         facts.subprocess_execution = self.check_subprocess_execution()
-        self._logger.info(
-            "Subprocess execution: %s", facts.subprocess_execution.value
-        )
+        self._logger.info("Subprocess execution: %s", facts.subprocess_execution.value)
 
         # Network access
         can_connect, net_status = self.check_network_access()
         facts.network_access = net_status
-        self._logger.info(
-            "Network access: %s (connected=%s)", net_status.value, can_connect
-        )
+        self._logger.info("Network access: %s (connected=%s)", net_status.value, can_connect)
 
         # Shell rc write
         facts.shell_rc_write = self.check_shell_rc_write(facts.shell_type)
@@ -283,9 +275,7 @@ class PermissionChecker:
 
         # Install directory write
         if facts.project_dir is not None:
-            facts.write_permissions["project_dir"] = self.check_project_dir_write(
-                facts.project_dir
-            )
+            facts.write_permissions["project_dir"] = self.check_project_dir_write(facts.project_dir)
             self._logger.info(
                 "Project dir write: %s",
                 facts.write_permissions["project_dir"].value,
@@ -301,19 +291,13 @@ class PermissionChecker:
         )
 
         # State directory write
-        facts.write_permissions["user_state"] = self.check_write_permission(
-            MacPaths.user_state_dir
-        )
+        facts.write_permissions["user_state"] = self.check_write_permission(MacPaths.user_state_dir)
 
         # Log directory write
-        facts.write_permissions["user_log"] = self.check_write_permission(
-            MacPaths.user_log_dir
-        )
+        facts.write_permissions["user_log"] = self.check_write_permission(MacPaths.user_log_dir)
 
         # Cache directory write
-        facts.write_permissions["user_cache"] = self.check_write_permission(
-            MacPaths.user_cache_dir
-        )
+        facts.write_permissions["user_cache"] = self.check_write_permission(MacPaths.user_cache_dir)
 
         # User install prefix write
         facts.write_permissions["user_install"] = self.check_write_permission(

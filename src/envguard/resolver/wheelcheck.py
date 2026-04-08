@@ -15,12 +15,15 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import Architecture
 except ImportError:
+
     class Architecture:  # type: ignore[no-redef]
         ARM64 = "arm64"
         X86_64 = "x86_64"
+
 
 logger = get_logger(__name__)
 
@@ -234,14 +237,18 @@ class WheelChecker:
         x86_only = _X86_64_PLATFORMS | _I386_PLATFORMS
 
         if expected_arch in (Architecture.ARM64, "arm64"):
-            if any(t in x86_only for t in tags) and not any(t in (_ARM64_PLATFORMS | _UNIVERSAL_PLATFORMS) for t in tags):
+            if any(t in x86_only for t in tags) and not any(
+                t in (_ARM64_PLATFORMS | _UNIVERSAL_PLATFORMS) for t in tags
+            ):
                 return (
                     f"Wheel '{wheel_filename}' is built for x86_64 (Intel) but "
                     f"the target architecture is {expected_arch} (Apple Silicon). "
                     f"Install Rosetta 2 or use a universal2 / arm64 wheel."
                 )
         elif expected_arch in (Architecture.X86_64, "x86_64"):
-            if any(t in arm_only for t in tags) and not any(t in (_X86_64_PLATFORMS | _UNIVERSAL_PLATFORMS) for t in tags):
+            if any(t in arm_only for t in tags) and not any(
+                t in (_X86_64_PLATFORMS | _UNIVERSAL_PLATFORMS) for t in tags
+            ):
                 return (
                     f"Wheel '{wheel_filename}' is built for arm64 (Apple Silicon) but "
                     f"the target architecture is {expected_arch} (Intel). "

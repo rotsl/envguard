@@ -78,9 +78,7 @@ class ProjectDiscovery:
     def __init__(self, project_dir: Path) -> None:
         self.project_dir = Path(project_dir).resolve()
         if not self.project_dir.is_dir():
-            raise EnvguardError(
-                f"Not a valid directory: {self.project_dir}"
-            )
+            raise EnvguardError(f"Not a valid directory: {self.project_dir}")
 
     # ------------------------------------------------------------------ #
     # Public entry point
@@ -147,9 +145,7 @@ class ProjectDiscovery:
             return False, {}
 
         if tomllib is None:
-            logger.warning(
-                "tomllib/tomli not available - cannot parse pyproject.toml"
-            )
+            logger.warning("tomllib/tomli not available - cannot parse pyproject.toml")
             return True, {}
 
         try:
@@ -159,9 +155,7 @@ class ProjectDiscovery:
             return True, data
         except Exception as exc:
             logger.error("Failed to parse pyproject.toml: %s", exc)
-            raise EnvguardError(
-                f"Could not parse {toml_path}: {exc}"
-            ) from exc
+            raise EnvguardError(f"Could not parse {toml_path}: {exc}") from exc
 
     def detect_requirements(self) -> tuple[bool, list[Path]]:
         """Find all requirements*.txt files.
@@ -219,10 +213,7 @@ class ProjectDiscovery:
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and (
                 getattr(node.func, "id", None) == "setup"
-                or (
-                    isinstance(node.func, ast.Attribute)
-                    and node.func.attr == "setup"
-                )
+                or (isinstance(node.func, ast.Attribute) and node.func.attr == "setup")
             ):
                 for kw in node.keywords:
                     if kw.arg in ("install_requires", "requires", "extras_require"):
@@ -409,11 +400,28 @@ class ProjectDiscovery:
 
         Skips binary files and directories like .git, __pycache__, etc.
         """
-        skip_dirs = {".git", "__pycache__", "node_modules", ".envguard",
-                      ".tox", ".venv", "venv", ".mypy_cache", ".pytest_cache"}
+        skip_dirs = {
+            ".git",
+            "__pycache__",
+            "node_modules",
+            ".envguard",
+            ".tox",
+            ".venv",
+            "venv",
+            ".mypy_cache",
+            ".pytest_cache",
+        }
         search_exts = {
-            ".py", ".txt", ".toml", ".yml", ".yaml", ".cfg", ".ini",
-            ".md", ".rst", ".sh",
+            ".py",
+            ".txt",
+            ".toml",
+            ".yml",
+            ".yaml",
+            ".cfg",
+            ".ini",
+            ".md",
+            ".rst",
+            ".sh",
         }
 
         project_dir = Path(project_dir)
@@ -462,9 +470,7 @@ class ProjectDiscovery:
             # Project metadata
             project_table = pyproject_data.get("project", {})
             intent.project_name = project_table.get("name", "unknown")
-            intent.project_version = str(
-                project_table.get("version", "unknown")
-            )
+            intent.project_version = str(project_table.get("version", "unknown"))
 
             # Python version requirement
             requires_python = project_table.get("requires-python", "")
@@ -473,9 +479,7 @@ class ProjectDiscovery:
 
             # Dependencies
             raw_deps = project_table.get("dependencies", [])
-            intent.dependencies.extend(
-                str(d) for d in raw_deps if isinstance(d, (str, dict))
-            )
+            intent.dependencies.extend(str(d) for d in raw_deps if isinstance(d, (str, dict)))
 
             # Optional / dev dependencies
             optional = project_table.get("optional-dependencies", {})
@@ -558,12 +562,8 @@ class ProjectDiscovery:
         intent.has_previous_envguard_state = self.detect_previous_state()
 
         # ── CUDA / MPS ──
-        intent.has_cuda_requirements = self.detect_cuda_requirements(
-            self.project_dir
-        )
-        intent.has_mps_requirements = self.detect_mps_requirements(
-            self.project_dir
-        )
+        intent.has_cuda_requirements = self.detect_cuda_requirements(self.project_dir)
+        intent.has_mps_requirements = self.detect_mps_requirements(self.project_dir)
 
         # ── Inference ──
         intent.environment_type = self.infer_environment_type(scan_results)

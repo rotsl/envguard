@@ -19,17 +19,19 @@ except ImportError:
     from envguard.update.manifest import UpdateManifest
 
 
-SAMPLE_MANIFEST_JSON = json.dumps({
-    "version": "0.2.0",
-    "download_url": "https://github.com/example/envguard/releases/tag/v0.2.0",
-    "changelog": "Added MPS detection, improved Rosetta handling",
-    "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "checksum_algorithm": "sha256",
-    "min_python_version": "3.10",
-    "platforms": ["darwin"],
-    "signature": "",
-    "release_date": "2026-04-01T00:00:00Z",
-})
+SAMPLE_MANIFEST_JSON = json.dumps(
+    {
+        "version": "0.2.0",
+        "download_url": "https://github.com/example/envguard/releases/tag/v0.2.0",
+        "changelog": "Added MPS detection, improved Rosetta handling",
+        "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "checksum_algorithm": "sha256",
+        "min_python_version": "3.10",
+        "platforms": ["darwin"],
+        "signature": "",
+        "release_date": "2026-04-01T00:00:00Z",
+    }
+)
 
 
 SAMPLE_MANIFEST_DICT = {
@@ -127,6 +129,7 @@ class TestUpdateVerifier:
 
     def test_verify_checksum_correct(self, verifier: UpdateVerifier, tmp_path: Path):
         import hashlib
+
         data = b"test content for checksum"
         expected = hashlib.sha256(data).hexdigest()
         test_file = tmp_path / "test.bin"
@@ -145,6 +148,7 @@ class TestUpdateVerifier:
 
     def test_verify_checksum_sha384(self, verifier: UpdateVerifier, tmp_path: Path):
         import hashlib
+
         data = b"sha384 test"
         expected = hashlib.sha384(data).hexdigest()
         test_file = tmp_path / "test.bin"
@@ -154,6 +158,7 @@ class TestUpdateVerifier:
 
     def test_verify_checksum_sha512(self, verifier: UpdateVerifier, tmp_path: Path):
         import hashlib
+
         data = b"sha512 test"
         expected = hashlib.sha512(data).hexdigest()
         test_file = tmp_path / "test.bin"
@@ -170,6 +175,7 @@ class TestUpdateVerifier:
 
     def test_verify_platform_darwin(self, verifier: UpdateVerifier):
         import sys
+
         manifest = UpdateManifest(platforms=["darwin"])
         result = verifier.verify_platform(manifest)
         # Only True on macOS (darwin); False on Linux CI
@@ -180,6 +186,7 @@ class TestUpdateVerifier:
 
     def test_verify_platform_linux(self, verifier: UpdateVerifier):
         import sys
+
         manifest = UpdateManifest(platforms=["linux"])
         result = verifier.verify_platform(manifest)
         # On macOS CI, this should be False; on Linux CI, True
@@ -203,6 +210,7 @@ class TestUpdateVerifier:
 
     def test_verify_integrity(self, verifier: UpdateVerifier, tmp_path: Path):
         import hashlib
+
         data = b"integrity test"
         checksum = hashlib.sha256(data).hexdigest()
         test_file = tmp_path / "test.bin"

@@ -23,31 +23,23 @@ class TestWheelChecker:
     # ------------------------------------------------------------------
 
     def test_parse_standard_wheel(self, checker: WheelChecker):
-        result = checker.parse_wheel_filename(
-            "numpy-1.24.0-cp311-cp311-macosx_11_0_arm64.whl"
-        )
+        result = checker.parse_wheel_filename("numpy-1.24.0-cp311-cp311-macosx_11_0_arm64.whl")
         assert result["dist"] == "numpy"
         assert result["version"] == "1.24.0"
         assert result["platform_tag"] == "macosx_11_0_arm64"
 
     def test_parse_x86_64_wheel(self, checker: WheelChecker):
-        result = checker.parse_wheel_filename(
-            "pandas-2.0.0-cp311-cp311-macosx_10_9_x86_64.whl"
-        )
+        result = checker.parse_wheel_filename("pandas-2.0.0-cp311-cp311-macosx_10_9_x86_64.whl")
         assert result["dist"] == "pandas"
         assert result["platform_tag"] == "macosx_10_9_x86_64"
 
     def test_parse_pure_python_wheel(self, checker: WheelChecker):
-        result = checker.parse_wheel_filename(
-            "requests-2.31.0-py3-none-any.whl"
-        )
+        result = checker.parse_wheel_filename("requests-2.31.0-py3-none-any.whl")
         assert result["dist"] == "requests"
         assert result["platform_tag"] == "any"
 
     def test_parse_wheel_with_build_tag(self, checker: WheelChecker):
-        result = checker.parse_wheel_filename(
-            "package-1.0-1-cp311-cp311-macosx_11_0_arm64.whl"
-        )
+        result = checker.parse_wheel_filename("package-1.0-1-cp311-cp311-macosx_11_0_arm64.whl")
         assert result["dist"] == "package"
         assert result["build"] == "1"
 

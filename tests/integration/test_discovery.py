@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 def _write_toml(path: Path, data: dict) -> None:
     """Write a dict structure as TOML (simplified)."""
     lines = []
+
     def _write_section(obj: dict, indent: int = 0) -> None:
         prefix = "    " * indent
         for key, value in obj.items():
@@ -31,6 +32,7 @@ def _write_toml(path: Path, data: dict) -> None:
                 lines.append(f"{prefix}{key} = {json.dumps(value)}")
             else:
                 lines.append(f"{prefix}{key} = {json.dumps(value)}")
+
     _write_section(data)
     path.write_text("\n".join(lines) + "\n")
 
@@ -125,32 +127,39 @@ class TestProjectDiscovery:
 
 # We need to define the fixtures used above that create actual project files
 
+
 @pytest.fixture
 def pip_simple_project(tmp_path: Path) -> Path:
-    _write_toml(tmp_path / "pyproject.toml", {
-        "build-system": {"requires": ["setuptools"], "build-backend": "setuptools.build_meta"},
-        "project": {
-            "name": "pip-simple",
-            "version": "0.1.0",
-            "requires-python": ">=3.10",
-            "dependencies": ["requests>=2.28", "numpy>=1.24"],
+    _write_toml(
+        tmp_path / "pyproject.toml",
+        {
+            "build-system": {"requires": ["setuptools"], "build-backend": "setuptools.build_meta"},
+            "project": {
+                "name": "pip-simple",
+                "version": "0.1.0",
+                "requires-python": ">=3.10",
+                "dependencies": ["requests>=2.28", "numpy>=1.24"],
+            },
         },
-    })
+    )
     (tmp_path / "requirements.txt").write_text("requests>=2.28\nnumpy>=1.24\n")
     return tmp_path
 
 
 @pytest.fixture
 def pyproject_based_project(tmp_path: Path) -> Path:
-    _write_toml(tmp_path / "pyproject.toml", {
-        "build-system": {"requires": ["hatchling"], "build-backend": "hatchling.build"},
-        "project": {
-            "name": "pyproject-demo",
-            "version": "0.2.0",
-            "requires-python": ">=3.11",
-            "dependencies": ["rich>=13.0", "typer>=0.9", "pydantic>=2.0"],
+    _write_toml(
+        tmp_path / "pyproject.toml",
+        {
+            "build-system": {"requires": ["hatchling"], "build-backend": "hatchling.build"},
+            "project": {
+                "name": "pyproject-demo",
+                "version": "0.2.0",
+                "requires-python": ">=3.11",
+                "dependencies": ["rich>=13.0", "typer>=0.9", "pydantic>=2.0"],
+            },
         },
-    })
+    )
     return tmp_path
 
 

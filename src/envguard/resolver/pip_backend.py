@@ -35,6 +35,7 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import (
         Architecture,
@@ -57,6 +58,7 @@ except ImportError:
     class Architecture:  # type: ignore[no-redef]
         ARM64 = "arm64"
         X86_64 = "x86_64"
+
 
 logger = get_logger(__name__)
 
@@ -101,9 +103,7 @@ class PipBackend(BaseResolver):
                 report = json.loads(proc.stdout)
                 packages: list[str] = []
                 for pkg in report.get("install", []):
-                    packages.append(
-                        f"{pkg['metadata']['name']}=={pkg['metadata']['version']}"
-                    )
+                    packages.append(f"{pkg['metadata']['name']}=={pkg['metadata']['version']}")
                 return packages
         except Exception:
             logger.debug("pip --dry-run failed, returning raw requirements")
@@ -202,11 +202,7 @@ class PipBackend(BaseResolver):
                 timeout=60,
             )
             if proc.returncode == 0:
-                return [
-                    line.strip()
-                    for line in proc.stdout.splitlines()
-                    if line.strip()
-                ]
+                return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
         except (FileNotFoundError, subprocess.TimeoutExpired):
             logger.debug("pip freeze failed for %s", env_path)
         return []
@@ -238,7 +234,14 @@ class PipBackend(BaseResolver):
 
         try:
             proc = subprocess.run(
-                [pip, "download", "--only-binary=:all:", f"--platform={target_platform}", "--dry-run", package],
+                [
+                    pip,
+                    "download",
+                    "--only-binary=:all:",
+                    f"--platform={target_platform}",
+                    "--dry-run",
+                    package,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -351,7 +354,9 @@ class PipBackend(BaseResolver):
 # Module-level helper
 # -----------------------------------------------------------------------
 
+
 def sys_prefix_fallback() -> str:
     """Return the current Python prefix (sys.prefix) or ``'.'``."""
     import sys
+
     return sys.prefix or "."

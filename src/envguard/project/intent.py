@@ -52,9 +52,9 @@ class IntentAnalyzer:
         logger.info("Analysing project intent for %s", self.intent.project_dir)
 
         # Accelerator targets
-        self.intent.extra["accelerator_targets"] = (
-            [t.value for t in self.determine_accelerator_targets()]
-        )
+        self.intent.extra["accelerator_targets"] = [
+            t.value for t in self.determine_accelerator_targets()
+        ]
 
         # macOS compatibility
         compatible = self.check_macos_compatibility()
@@ -68,9 +68,7 @@ class IntentAnalyzer:
         self.intent.remediation_hints = self.generate_remediation_hints()
 
         # Recommended environment type
-        self.intent.extra["recommended_environment_type"] = (
-            self.recommend_environment_type().value
-        )
+        self.intent.extra["recommended_environment_type"] = self.recommend_environment_type().value
 
         # Recommended Python version
         recommended_py = self.recommend_python_version()
@@ -82,7 +80,8 @@ class IntentAnalyzer:
 
         logger.info(
             "Analysis complete: compatible=%s, unsupported=%s",
-            compatible, unsupported,
+            compatible,
+            unsupported,
         )
         return self.intent
 
@@ -153,9 +152,7 @@ class IntentAnalyzer:
         # CUDA-only projects are not natively compatible with macOS
         if self.intent.has_cuda_requirements and not self.intent.has_mps_requirements:
             # Could still be compatible if user is okay with CPU-only
-            dep_str = " ".join(
-                self.intent.dependencies + self.intent.dev_dependencies
-            ).lower()
+            dep_str = " ".join(self.intent.dependencies + self.intent.dev_dependencies).lower()
             # If all CUDA deps have CPU fallbacks, still consider compatible
             if re.search(r"torch[-_]cu|nvidia[-_]cu", dep_str):
                 return False
@@ -260,17 +257,21 @@ class IntentAnalyzer:
                 )
 
         # Specific macOS-incompatible packages
-        macos_incompatible = {"nvidia-cublas-cu11", "nvidia-cuda-nvrtc-cu11",
-                              "nvidia-cufft-cu11", "nvidia-cusparse-cu11",
-                              "nvidia-cudnn-cu11"}
-        dep_set = {d.lower().split("[")[0].split("==")[0].split(">=")[0].split("~=")[0].strip()
-                   for d in self.intent.dependencies}
+        macos_incompatible = {
+            "nvidia-cublas-cu11",
+            "nvidia-cuda-nvrtc-cu11",
+            "nvidia-cufft-cu11",
+            "nvidia-cusparse-cu11",
+            "nvidia-cudnn-cu11",
+        }
+        dep_set = {
+            d.lower().split("[")[0].split("==")[0].split(">=")[0].split("~=")[0].strip()
+            for d in self.intent.dependencies
+        }
         found_incompatible = dep_set & macos_incompatible
         if found_incompatible and self.facts.os_name == "Darwin":
             for pkg in sorted(found_incompatible):
-                unsupported.append(
-                    f"Package '{pkg}' is not available on macOS"
-                )
+                unsupported.append(f"Package '{pkg}' is not available on macOS")
 
         return unsupported
 
@@ -291,7 +292,7 @@ class IntentAnalyzer:
         # Remove specifiers
         for prefix in (">=", "<=", "==", "!=", "~=", ">", "<", "^"):
             if cleaned.startswith(prefix):
-                cleaned = cleaned[len(prefix):].strip()
+                cleaned = cleaned[len(prefix) :].strip()
 
         # Take only the version part (before any space or semicolon)
         cleaned = cleaned.split()[0].split(";")[0].strip()
@@ -396,8 +397,7 @@ class IntentAnalyzer:
                     "'pip install torch torchvision torchaudio'"
                 )
                 hints.append(
-                    "Alternatively, consider using a cloud VM with NVIDIA GPUs "
-                    "for CUDA workloads"
+                    "Alternatively, consider using a cloud VM with NVIDIA GPUs for CUDA workloads"
                 )
 
             if "conda" in lower and "not installed" in lower:
@@ -409,15 +409,11 @@ class IntentAnalyzer:
 
             if "mamba" in lower and "not installed" in lower:
                 hints.append(
-                    "Install Mamba: "
-                    "'conda install -c conda-forge mamba' "
-                    "or 'brew install mamba'"
+                    "Install Mamba: 'conda install -c conda-forge mamba' or 'brew install mamba'"
                 )
 
             if "xcode" in lower:
-                hints.append(
-                    "Install Xcode Command Line Tools: 'xcode-select --install'"
-                )
+                hints.append("Install Xcode Command Line Tools: 'xcode-select --install'")
 
             if "python" in lower and "requires" in lower:
                 hints.append(
@@ -455,9 +451,7 @@ class IntentAnalyzer:
                 notes.append("Running on Intel (x86_64) macOS")
 
             if self.intent.has_mps_requirements:
-                notes.append(
-                    "MPS (Metal Performance Shaders) acceleration is available"
-                )
+                notes.append("MPS (Metal Performance Shaders) acceleration is available")
 
             if self.intent.has_cuda_requirements:
                 notes.append(
@@ -466,10 +460,7 @@ class IntentAnalyzer:
                 )
 
         # Python version note
-        if (
-            self.intent.python_version_required
-            and self.facts.python_version != "unknown"
-        ):
+        if self.intent.python_version_required and self.facts.python_version != "unknown":
             req = self._parse_version_tuple(self.intent.python_version_required)
             avail = self._parse_version_tuple(self.facts.python_version)
             if req and avail:

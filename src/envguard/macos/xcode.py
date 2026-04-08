@@ -203,9 +203,7 @@ class XcodeChecker:
                 if fallback:
                     found = shutil.which(fallback) is not None
                     if found:
-                        logger.debug(
-                            "%s not found but fallback %s is available", tool, fallback
-                        )
+                        logger.debug("%s not found but fallback %s is available", tool, fallback)
                         continue
             if not found:
                 missing.append(tool)

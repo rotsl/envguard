@@ -20,6 +20,7 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 logger = get_logger(__name__)
 
 

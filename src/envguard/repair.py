@@ -99,8 +99,9 @@ class RepairEngine:
             environment_type=env_type,
             python_version=self._facts.python_version,
             environment_path=self._env_path or Path(""),
-            accelerator_target=(self._intent.accelerator_target
-                                if self._intent else AcceleratorTarget.CPU),
+            accelerator_target=(
+                self._intent.accelerator_target if self._intent else AcceleratorTarget.CPU
+            ),
         )
         resolution.resolution_id = resolution.id
 
@@ -122,8 +123,7 @@ class RepairEngine:
             for f in manual:
                 recommendation = self.recommend_alternative(f)
                 resolution.notes.append(f"MANUAL: {f.rule_id}: {recommendation}")
-                logger.warning("Manual intervention required: %s - %s",
-                               f.rule_id, recommendation)
+                logger.warning("Manual intervention required: %s - %s", f.rule_id, recommendation)
 
         if not repairable:
             resolution.success = False
@@ -141,7 +141,9 @@ class RepairEngine:
                     resolution.repair_actions_taken.append(f"{finding.rule_id}:{action_val}")
                 else:
                     self._repair_log.append(f"FAIL: {finding.rule_id}")
-                    resolution.notes.append(f"Repair failed for {finding.rule_id}: {finding.message}")
+                    resolution.notes.append(
+                        f"Repair failed for {finding.rule_id}: {finding.message}"
+                    )
             except Exception as exc:
                 error_msg = f"Exception during repair of {finding.rule_id}: {exc}"
                 logger.error(error_msg)
@@ -216,9 +218,11 @@ class RepairEngine:
         python_version = resolution.python_version or self._facts.python_version
         created = False
 
-        if (self._intent
-                and self._intent.environment_type == EnvironmentType.CONDA
-                and self._facts.has_conda):
+        if (
+            self._intent
+            and self._intent.environment_type == EnvironmentType.CONDA
+            and self._facts.has_conda
+        ):
             env_name = self._project_dir.name
             created = self._create_conda_env(python_version, env_name)
             if created:
@@ -285,7 +289,9 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "freeze"],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if result.returncode != 0:
                 logger.error("pip freeze failed: %s", result.stderr)
@@ -304,7 +310,9 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 ["conda", "run", "-n", conda_env_name, "conda-unpack"],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode == 0:
                 logger.info("conda-unpack succeeded.")
@@ -317,9 +325,21 @@ class RepairEngine:
         pip_only: list[str] = []
 
         conda_common = {
-            "numpy", "scipy", "pandas", "matplotlib", "scikit-learn",
-            "pillow", "requests", "flask", "django", "pytest",
-            "click", "six", "pyyaml", "cryptography", "jinja2",
+            "numpy",
+            "scipy",
+            "pandas",
+            "matplotlib",
+            "scikit-learn",
+            "pillow",
+            "requests",
+            "flask",
+            "django",
+            "pytest",
+            "click",
+            "six",
+            "pyyaml",
+            "cryptography",
+            "jinja2",
         }
 
         for pkg_line in pip_packages:
@@ -337,7 +357,9 @@ class RepairEngine:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "uninstall", "-y", "-r", "/dev/stdin"],
                 input=proc_input,
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode != 0:
                 logger.warning("pip uninstall returned non-zero: %s", result.stderr)
@@ -348,8 +370,17 @@ class RepairEngine:
         if conda_installable:
             try:
                 result = subprocess.run(
-                    ["conda", "install", "-y", "--name", self._project_dir.name, *conda_installable],
-                    capture_output=True, text=True, timeout=300,
+                    [
+                        "conda",
+                        "install",
+                        "-y",
+                        "--name",
+                        self._project_dir.name,
+                        *conda_installable,
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
                 )
                 if result.returncode != 0:
                     logger.warning("conda install failed for some packages.")
@@ -363,7 +394,10 @@ class RepairEngine:
             try:
                 pip_args = [str(python_bin), "-m", "pip", "install", "--no-deps", *pip_only]
                 result = subprocess.run(
-                    pip_args, capture_output=True, text=True, timeout=300,
+                    pip_args,
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
                 )
                 if result.returncode != 0:
                     logger.warning("pip install --no-deps failed for some packages.")
@@ -396,8 +430,7 @@ class RepairEngine:
 
         python_bin = self._find_python_version(version_str)
         if python_bin is None:
-            logger.error("Python %s not found. Install via pyenv, brew, or conda.",
-                         version_str)
+            logger.error("Python %s not found. Install via pyenv, brew, or conda.", version_str)
             return False
 
         logger.info("Found Python %s at '%s'", version_str, python_bin)
@@ -423,20 +456,21 @@ class RepairEngine:
             project_dir=self._project_dir,
             python_version=version_str,
             environment_path=env_path,
-            environment_type=(self._intent.environment_type
-                              if self._intent else EnvironmentType.VENV),
-            packages_installed=(self._intent.dependencies[:]
-                                if self._intent else []),
+            environment_type=(
+                self._intent.environment_type if self._intent else EnvironmentType.VENV
+            ),
+            packages_installed=(self._intent.dependencies[:] if self._intent else []),
         )
         resolution.resolution_id = resolution.id
 
         result = subprocess.run(
             [str(python_bin), "-m", "venv", str(env_path)],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         if result.returncode != 0:
-            logger.error("Failed to create venv with Python %s: %s",
-                         version_str, result.stderr)
+            logger.error("Failed to create venv with Python %s: %s", version_str, result.stderr)
             return False
 
         # Install dependencies
@@ -608,8 +642,7 @@ class RepairEngine:
             }
 
             if f.auto_repairable:
-                entry["action"] = (f.repair_action.value
-                                   if f.repair_action else None)
+                entry["action"] = f.repair_action.value if f.repair_action else None
                 auto.append(entry)
                 action_str = f.repair_action.value if f.repair_action else "unknown"
                 steps.append(f"[AUTO] {f.rule_id}: {action_str}")
@@ -617,22 +650,20 @@ class RepairEngine:
                 manual.append(entry)
                 steps.append(f"[MANUAL] {f.rule_id}: requires human intervention")
 
-        if any(f.repair_action == RepairAction.RECREATE_ENVIRONMENT
-               for f in findings):
+        if any(f.repair_action == RepairAction.RECREATE_ENVIRONMENT for f in findings):
             risks.append(
                 "Environment recreation will remove all installed packages. "
-                "A backup will be attempted.")
+                "A backup will be attempted."
+            )
 
-        if any(f.repair_action == RepairAction.FIX_OWNERSHIP
-               for f in findings):
+        if any(f.repair_action == RepairAction.FIX_OWNERSHIP for f in findings):
             risks.append(
                 "Fixing pip/conda ownership may temporarily break imports "
-                "until reinstallation completes.")
+                "until reinstallation completes."
+            )
 
-        if any(f.repair_action == RepairAction.SWITCH_PYTHON
-               for f in findings):
-            risks.append(
-                "Switching Python version requires recreating the environment.")
+        if any(f.repair_action == RepairAction.SWITCH_PYTHON for f in findings):
+            risks.append("Switching Python version requires recreating the environment.")
 
         return {
             "findings": [f.rule_id for f in findings],
@@ -667,7 +698,9 @@ class RepairEngine:
             try:
                 result = subprocess.run(
                     [str(python_bin), "-m", "pip", "freeze"],
-                    capture_output=True, text=True, timeout=30,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
                 if result.returncode == 0:
                     freeze_file = backup_dir / "pip_freeze.txt"
@@ -681,7 +714,9 @@ class RepairEngine:
             try:
                 result = subprocess.run(
                     ["conda", "env", "export"],
-                    capture_output=True, text=True, timeout=30,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
                 if result.returncode == 0:
                     conda_file = backup_dir / "conda_env.yml"
@@ -694,8 +729,7 @@ class RepairEngine:
             "timestamp": timestamp,
             "original_path": str(env_path),
             "python_version": self._facts.python_version,
-            "env_type": (self._intent.environment_type.value
-                         if self._intent else "unknown"),
+            "env_type": (self._intent.environment_type.value if self._intent else "unknown"),
             "project_dir": str(self._project_dir),
         }
         meta_file = backup_dir / "backup_meta.json"
@@ -744,7 +778,9 @@ class RepairEngine:
                 try:
                     result = subprocess.run(
                         ["conda", "env", "create", "-f", str(conda_file)],
-                        capture_output=True, text=True, timeout=300,
+                        capture_output=True,
+                        text=True,
+                        timeout=300,
                     )
                     if result.returncode == 0:
                         logger.info("Conda environment restored from backup.")
@@ -757,11 +793,12 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "venv", str(original_path)],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode != 0:
-                logger.error("venv creation failed during rollback: %s",
-                             result.stderr)
+                logger.error("venv creation failed during rollback: %s", result.stderr)
                 return False
         except (subprocess.TimeoutExpired, OSError) as exc:
             logger.error("venv creation failed during rollback: %s", exc)
@@ -773,9 +810,10 @@ class RepairEngine:
             if python_bin:
                 try:
                     result = subprocess.run(
-                        [str(python_bin), "-m", "pip", "install",
-                         "-r", str(freeze_file)],
-                        capture_output=True, text=True, timeout=300,
+                        [str(python_bin), "-m", "pip", "install", "-r", str(freeze_file)],
+                        capture_output=True,
+                        text=True,
+                        timeout=300,
                     )
                     if result.returncode == 0:
                         logger.info("Rollback complete - packages restored.")
@@ -799,13 +837,16 @@ class RepairEngine:
         python_bin = self._find_python_version(python_version)
         if python_bin is None:
             python_bin = Path(sys.executable)
-            logger.warning("Python %s not found - using system Python: %s",
-                           python_version, python_bin)
+            logger.warning(
+                "Python %s not found - using system Python: %s", python_version, python_bin
+            )
 
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "venv", str(env_path)],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             if result.returncode != 0:
                 logger.error("venv creation failed: %s", result.stderr)
@@ -819,9 +860,10 @@ class RepairEngine:
         if new_python:
             with contextlib.suppress(subprocess.TimeoutExpired, OSError):
                 subprocess.run(
-                    [str(new_python), "-m", "pip", "install",
-                     "--upgrade", "pip", "--quiet"],
-                    capture_output=True, text=True, timeout=60,
+                    [str(new_python), "-m", "pip", "install", "--upgrade", "pip", "--quiet"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
                 )
 
         logger.info("venv created at '%s'", env_path)
@@ -835,9 +877,10 @@ class RepairEngine:
 
         try:
             result = subprocess.run(
-                ["conda", "create", "-y", "-n", env_name,
-                 f"python={python_version}", "pip"],
-                capture_output=True, text=True, timeout=300,
+                ["conda", "create", "-y", "-n", env_name, f"python={python_version}", "pip"],
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
             if result.returncode != 0:
                 logger.error("conda create failed: %s", result.stderr)
@@ -854,7 +897,9 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 ["conda", "env", "remove", "-y", "-n", env_name],
-                capture_output=True, text=True, timeout=60,
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, OSError):
@@ -892,12 +937,12 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "install", *all_deps],
-                capture_output=True, text=True, timeout=600,
+                capture_output=True,
+                text=True,
+                timeout=600,
             )
             if result.returncode != 0:
-                stderr_tail = (result.stderr[-500:]
-                               if len(result.stderr) > 500
-                               else result.stderr)
+                stderr_tail = result.stderr[-500:] if len(result.stderr) > 500 else result.stderr
                 logger.error("pip install failed: %s", stderr_tail)
                 return False
         except subprocess.TimeoutExpired:
@@ -915,38 +960,40 @@ class RepairEngine:
         logger.info("Dependencies installed successfully.")
         return True
 
-    def _install_from_requirements(self, python_bin: Path,
-                                    req_file: Path) -> bool:
+    def _install_from_requirements(self, python_bin: Path, req_file: Path) -> bool:
         """Install from a requirements.txt file."""
         logger.info("Installing from requirements.txt: %s", req_file)
         try:
             result = subprocess.run(
-                [str(python_bin), "-m", "pip", "install",
-                 "-r", str(req_file)],
-                capture_output=True, text=True, timeout=600,
+                [str(python_bin), "-m", "pip", "install", "-r", str(req_file)],
+                capture_output=True,
+                text=True,
+                timeout=600,
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, OSError) as exc:
             logger.error("pip install -r failed: %s", exc)
             return False
 
-    def _install_from_pyproject(self, python_bin: Path,
-                                 pyproject: Path) -> bool:
+    def _install_from_pyproject(self, python_bin: Path, pyproject: Path) -> bool:
         """Install from a pyproject.toml file using pip."""
         logger.info("Installing from pyproject.toml: %s", pyproject)
         try:
             # Try editable install first
             result = subprocess.run(
-                [str(python_bin), "-m", "pip", "install", "-e",
-                 str(self._project_dir)],
-                capture_output=True, text=True, timeout=600,
+                [str(python_bin), "-m", "pip", "install", "-e", str(self._project_dir)],
+                capture_output=True,
+                text=True,
+                timeout=600,
             )
             if result.returncode == 0:
                 return True
             # Fallback
             result2 = subprocess.run(
                 [str(python_bin), "-m", "pip", "install", "."],
-                capture_output=True, text=True, timeout=600,
+                capture_output=True,
+                text=True,
+                timeout=600,
                 cwd=str(self._project_dir),
             )
             return result2.returncode == 0
@@ -970,7 +1017,9 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "--version"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode != 0:
                 return False
@@ -980,7 +1029,9 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "--version"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode != 0:
                 return False
@@ -1010,15 +1061,13 @@ class RepairEngine:
 
     def _repair_recreate_environment(self, finding: RuleFinding) -> bool:
         """Handle RECREATE_ENVIRONMENT."""
-        env_type = (self._intent.environment_type
-                    if self._intent else EnvironmentType.VENV)
+        env_type = self._intent.environment_type if self._intent else EnvironmentType.VENV
         resolution = ResolutionRecord(
             project_dir=self._project_dir,
             environment_type=env_type,
             python_version=self._facts.python_version,
             environment_path=self._env_path or Path(""),
-            packages_installed=(self._intent.dependencies[:]
-                                if self._intent else []),
+            packages_installed=(self._intent.dependencies[:] if self._intent else []),
         )
         resolution.resolution_id = resolution.id
         return self.recreate_environment(resolution)
@@ -1029,8 +1078,7 @@ class RepairEngine:
 
     def _repair_switch_python(self, finding: RuleFinding) -> bool:
         """Handle SWITCH_PYTHON."""
-        target = (finding.details.get("required")
-                  or finding.details.get("expected"))
+        target = finding.details.get("required") or finding.details.get("expected")
         if not target:
             logger.error("No target Python version in finding details.")
             return False
@@ -1042,22 +1090,21 @@ class RepairEngine:
         if not missing:
             return True
 
-        python_bin = (self._find_env_python(Path(self._env_path))
-                      if self._env_path else None)
+        python_bin = self._find_env_python(Path(self._env_path)) if self._env_path else None
         if python_bin is None:
             python_bin = Path(sys.executable)
 
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "install", *missing],
-                capture_output=True, text=True, timeout=300,
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
             if result.returncode == 0:
-                logger.info("Installed missing packages: %s",
-                            ", ".join(missing))
+                logger.info("Installed missing packages: %s", ", ".join(missing))
                 return True
-            logger.error("Failed to install missing packages: %s",
-                         result.stderr[-300:])
+            logger.error("Failed to install missing packages: %s", result.stderr[-300:])
             return False
         except (subprocess.TimeoutExpired, OSError) as exc:
             logger.error("pip install for missing packages failed: %s", exc)
@@ -1068,9 +1115,18 @@ class RepairEngine:
         if "pip" in finding.rule_id.lower() or "pip" in finding.remediation.lower():
             try:
                 result = subprocess.run(
-                    [sys.executable, "-m", "pip", "install",
-                     "--upgrade", "pip", "--force-reinstall"],
-                    capture_output=True, text=True, timeout=60,
+                    [
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "install",
+                        "--upgrade",
+                        "pip",
+                        "--force-reinstall",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
                 )
                 return result.returncode == 0
             except (subprocess.TimeoutExpired, OSError):
@@ -1080,7 +1136,9 @@ class RepairEngine:
             try:
                 result = subprocess.run(
                     ["conda", "update", "-y", "conda"],
-                    capture_output=True, text=True, timeout=120,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
                 )
                 return result.returncode == 0
             except (subprocess.TimeoutExpired, OSError):
@@ -1090,15 +1148,13 @@ class RepairEngine:
 
     def _repair_reinstall_packages(self, finding: RuleFinding) -> bool:
         """Handle REINSTALL_PACKAGES."""
-        env_type = (self._intent.environment_type
-                    if self._intent else EnvironmentType.VENV)
+        env_type = self._intent.environment_type if self._intent else EnvironmentType.VENV
         resolution = ResolutionRecord(
             project_dir=self._project_dir,
             environment_type=env_type,
             python_version=self._facts.python_version,
             environment_path=self._env_path or Path(""),
-            packages_installed=(self._intent.dependencies[:]
-                                if self._intent else []),
+            packages_installed=(self._intent.dependencies[:] if self._intent else []),
         )
         resolution.resolution_id = resolution.id
         return self._install_dependencies(resolution)
@@ -1109,15 +1165,16 @@ class RepairEngine:
         if not packages:
             return True
 
-        python_bin = (self._find_env_python(Path(self._env_path))
-                      if self._env_path else None)
+        python_bin = self._find_env_python(Path(self._env_path)) if self._env_path else None
         if python_bin is None:
             python_bin = Path(sys.executable)
 
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "install", "--no-binary", ":all:", *packages],
-                capture_output=True, text=True, timeout=600,
+                capture_output=True,
+                text=True,
+                timeout=600,
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, OSError):
@@ -1126,8 +1183,7 @@ class RepairEngine:
     def _repair_manual_intervention(self, finding: RuleFinding) -> bool:
         """Handle MANUAL_INTERVENTION - cannot auto-repair."""
         recommendation = self.recommend_alternative(finding)
-        logger.info("Manual intervention required for %s: %s",
-                    finding.rule_id, recommendation)
+        logger.info("Manual intervention required for %s: %s", finding.rule_id, recommendation)
         return False
 
     # ------------------------------------------------------------------
@@ -1138,11 +1194,10 @@ class RepairEngine:
         """Ensure extended HostFacts fields are populated."""
         f = self._facts
         if not f.is_macos:
-            f.is_macos = (f.os_name == "Darwin")
+            f.is_macos = f.os_name == "Darwin"
         if f.architecture == Architecture.ARM64:
             f.is_apple_silicon = True
-        if (f.is_macos and f.is_apple_silicon
-                and not f.mps_available and f.os_version != "unknown"):
+        if f.is_macos and f.is_apple_silicon and not f.mps_available and f.os_version != "unknown":
             try:
                 parts = f.os_version.split(".")
                 major = int(parts[0]) if parts else 0
@@ -1188,8 +1243,7 @@ class RepairEngine:
         intent.project_name = self._project_dir.name
         if (self._project_dir / "requirements.txt").exists():
             intent.has_requirements_txt = True
-            intent.dependencies = self._read_requirements(
-                self._project_dir / "requirements.txt")
+            intent.dependencies = self._read_requirements(self._project_dir / "requirements.txt")
         if (self._project_dir / "pyproject.toml").exists():
             intent.has_pyproject_toml = True
         if (self._project_dir / "environment.yml").exists():
@@ -1221,8 +1275,7 @@ class RepairEngine:
             if c.exists():
                 return c
 
-        env_type = (self._intent.environment_type
-                    if self._intent else EnvironmentType.VENV)
+        env_type = self._intent.environment_type if self._intent else EnvironmentType.VENV
         if env_type == EnvironmentType.CONDA:
             return self._project_dir / ".conda"
         return self._project_dir / ".venv"
@@ -1266,7 +1319,9 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 ["conda", "env", "list", "--json"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             if result.returncode == 0:
                 data = json.loads(result.stdout)
@@ -1285,7 +1340,9 @@ class RepairEngine:
         try:
             result = subprocess.run(
                 ["pyenv", "which", f"python{version}"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode == 0:
                 p = Path(result.stdout.strip())
@@ -1305,6 +1362,7 @@ class RepairEngine:
 
         # System PATH
         import shutil as _shutil
+
         python_bin = _shutil.which(f"python{version}")
         if python_bin:
             p = Path(python_bin)
@@ -1318,9 +1376,10 @@ class RepairEngine:
         """List installed packages using pip."""
         try:
             result = subprocess.run(
-                [str(python_bin), "-m", "pip", "list",
-                 "--format=freeze"],
-                capture_output=True, text=True, timeout=30,
+                [str(python_bin), "-m", "pip", "list", "--format=freeze"],
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if result.returncode == 0:
                 packages = set()

@@ -90,7 +90,10 @@ class RulesEngine:
             if finding is not None:
                 findings.append(finding)
                 logger.info(
-                    "Finding: [%s] %s - %s", finding.severity.value, finding.rule_id, finding.message
+                    "Finding: [%s] %s - %s",
+                    finding.severity.value,
+                    finding.rule_id,
+                    finding.message,
                 )
 
         logger.info("Rules evaluation complete - %d finding(s)", len(findings))
@@ -172,8 +175,10 @@ class RulesEngine:
         req_tuple = (int(req_parts.group(1)), int(req_parts.group(2)))
         host_version = self._facts.python_version or "0.0.0"
         host_parts = host_version.split(".")
-        host_tuple = (int(host_parts[0]) if host_parts[0].isdigit() else 0,
-                      int(host_parts[1]) if len(host_parts) > 1 and host_parts[1].isdigit() else 0)
+        host_tuple = (
+            int(host_parts[0]) if host_parts[0].isdigit() else 0,
+            int(host_parts[1]) if len(host_parts) > 1 and host_parts[1].isdigit() else 0,
+        )
 
         if host_tuple >= req_tuple:
             return None
@@ -216,7 +221,8 @@ class RulesEngine:
             return None
 
         cuda_deps = [
-            dep for dep in self._intent.dependencies
+            dep
+            for dep in self._intent.dependencies
             if any(tag in dep.lower() for tag in ("torch", "tensorflow", "jax", "cuda", "nvidia"))
         ]
 
@@ -309,9 +315,21 @@ class RulesEngine:
         """
         host_arch_str = "arm64" if self._is_arm64() else "x86_64"
         arch_sensitive_packages = {
-            "torch", "pytorch", "tensorflow", "numpy", "scipy", "pandas",
-            "scikit-learn", "opencv-python", "pillow", "psutil", "lxml",
-            "cryptography", "pyyaml", "grpcio", "protobuf",
+            "torch",
+            "pytorch",
+            "tensorflow",
+            "numpy",
+            "scipy",
+            "pandas",
+            "scikit-learn",
+            "opencv-python",
+            "pillow",
+            "psutil",
+            "lxml",
+            "cryptography",
+            "pyyaml",
+            "grpcio",
+            "protobuf",
         }
 
         problematic: list[str] = []
@@ -389,7 +407,10 @@ class RulesEngine:
                 ),
                 auto_repairable=True,
                 repair_action=RepairAction.FIX_OWNERSHIP,
-                details={"mixed_packages": sorted(set(mixed)), "pip_only_count": len(pip_only_in_conda)},
+                details={
+                    "mixed_packages": sorted(set(mixed)),
+                    "pip_only_count": len(pip_only_in_conda),
+                },
             )
 
         if len(pip_only_in_conda) > 10:
@@ -501,10 +522,26 @@ class RulesEngine:
     def check_dependency_conflicts(self) -> RuleFinding | None:
         """Look for known dependency conflict patterns."""
         known_conflicts: list[tuple[str, str, str]] = [
-            ("tensorflow", "torch", "TensorFlow and PyTorch can coexist but may cause library conflicts (e.g., protobuf version). Pin protobuf explicitly."),
-            ("tensorflow", "jax", "TensorFlow and JAX share low-level dependencies; ensure compatible versions."),
-            ("numpy<1.20", "torch>=1.10", "Old numpy versions are incompatible with recent PyTorch."),
-            ("setuptools<58", "wheel>=0.37", "Old setuptools may not handle modern wheel metadata."),
+            (
+                "tensorflow",
+                "torch",
+                "TensorFlow and PyTorch can coexist but may cause library conflicts (e.g., protobuf version). Pin protobuf explicitly.",
+            ),
+            (
+                "tensorflow",
+                "jax",
+                "TensorFlow and JAX share low-level dependencies; ensure compatible versions.",
+            ),
+            (
+                "numpy<1.20",
+                "torch>=1.10",
+                "Old numpy versions are incompatible with recent PyTorch.",
+            ),
+            (
+                "setuptools<58",
+                "wheel>=0.37",
+                "Old setuptools may not handle modern wheel metadata.",
+            ),
         ]
 
         all_deps_lower = [
@@ -514,13 +551,27 @@ class RulesEngine:
         dep_set = set(all_deps_lower)
 
         for conflict_spec in self._intent.known_conflicts:
-            known_conflicts.append(
-                (conflict_spec, "*", f"User-flagged conflict: {conflict_spec}")
-            )
+            known_conflicts.append((conflict_spec, "*", f"User-flagged conflict: {conflict_spec}"))
 
         for pattern_a, pattern_b, description in known_conflicts:
-            name_a = pattern_a.split("<")[0].split(">")[0].split("=")[0].split("!")[0].split("~")[0].strip().lower()
-            name_b = pattern_b.split("<")[0].split(">")[0].split("=")[0].split("!")[0].split("~")[0].strip().lower()
+            name_a = (
+                pattern_a.split("<")[0]
+                .split(">")[0]
+                .split("=")[0]
+                .split("!")[0]
+                .split("~")[0]
+                .strip()
+                .lower()
+            )
+            name_b = (
+                pattern_b.split("<")[0]
+                .split(">")[0]
+                .split("=")[0]
+                .split("!")[0]
+                .split("~")[0]
+                .strip()
+                .lower()
+            )
 
             if name_b == "*":
                 if name_a in dep_set:
@@ -707,7 +758,7 @@ class RulesEngine:
         if not f.is_macos and f.os_name == "Darwin":
             f.is_macos = True
         if not f.is_macos:
-            f.is_macos = (f.os_name == "Darwin")
+            f.is_macos = f.os_name == "Darwin"
         if f.architecture == Architecture.ARM64:
             f.is_apple_silicon = True
         if not f.mps_available and f.is_macos and f.is_apple_silicon:
@@ -736,9 +787,7 @@ class RulesEngine:
         if not i.name:
             i.name = i.project_dir.name if i.project_dir else "unnamed-project"
         # Sync accelerator target
-        if (i.accelerator_target == AcceleratorTarget.CPU
-                and i.requires_cuda
-                and self._is_macos()):
+        if i.accelerator_target == AcceleratorTarget.CPU and i.requires_cuda and self._is_macos():
             i.accelerator_target = AcceleratorTarget.MPS
 
     # ------------------------------------------------------------------
@@ -810,7 +859,9 @@ class RulesEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "-c", "import site; print(site.getsitepackages()[0])"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode == 0:
                 return Path(result.stdout.strip())
@@ -832,7 +883,9 @@ class RulesEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "list", "--format=freeze"],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             if result.returncode == 0:
                 packages = set()
@@ -849,9 +902,20 @@ class RulesEngine:
         """Check PyPI for wheel compatibility with the host architecture."""
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "pip", "index", "versions", package_name,
-                 "--pre", "--format", "json"],
-                capture_output=True, text=True, timeout=15,
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "index",
+                    "versions",
+                    package_name,
+                    "--pre",
+                    "--format",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             if result.returncode == 0:
                 output = result.stdout
@@ -867,6 +931,7 @@ class RulesEngine:
     def _check_connectivity() -> bool:
         """Lightweight network connectivity check via TCP."""
         import socket
+
         for host in ("pypi.org", "files.pythonhosted.org"):
             try:
                 socket.create_connection((host, 443), timeout=3)
@@ -881,13 +946,17 @@ class RulesEngine:
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "pip", "--version"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode != 0:
                 return False
             result2 = subprocess.run(
                 [sys.executable, "-m", "pip", "install", "--dry-run", "--quiet", "six"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             return result2.returncode == 0
         except (subprocess.TimeoutExpired, OSError):
@@ -899,7 +968,9 @@ class RulesEngine:
         try:
             result = subprocess.run(
                 ["conda", "info"],
-                capture_output=True, text=True, timeout=15,
+                capture_output=True,
+                text=True,
+                timeout=15,
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, OSError):

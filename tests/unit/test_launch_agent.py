@@ -58,7 +58,8 @@ class TestLaunchAgentManager:
         dict_el = ET.fromstring(xml_content).find("dict")
         children = list(dict_el)
         interval_el = next(
-            children[i + 1] for i, el in enumerate(children)
+            children[i + 1]
+            for i, el in enumerate(children)
             if el.tag == "key" and el.text == "StartInterval"
         )
         # 12 hours = 43200 seconds
@@ -69,7 +70,8 @@ class TestLaunchAgentManager:
         dict_el = ET.fromstring(xml_content).find("dict")
         children = list(dict_el)
         interval_el = next(
-            children[i + 1] for i, el in enumerate(children)
+            children[i + 1]
+            for i, el in enumerate(children)
             if el.tag == "key" and el.text == "StartInterval"
         )
         assert int(interval_el.text) == 86400

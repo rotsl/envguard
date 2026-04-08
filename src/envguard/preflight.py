@@ -87,8 +87,12 @@ class PreflightEngine:
         try:
             facts = self._detect_host()
             result.host_facts = facts
-            logger.info("Host detected: %s %s / Python %s",
-                        facts.os_name, facts.os_version, facts.python_version)
+            logger.info(
+                "Host detected: %s %s / Python %s",
+                facts.os_name,
+                facts.os_version,
+                facts.python_version,
+            )
         except Exception as exc:
             error_msg = f"Host detection failed: {exc}"
             logger.error(error_msg)
@@ -103,8 +107,11 @@ class PreflightEngine:
         try:
             intent = self._discover_project()
             result.project_intent = intent
-            logger.info("Project discovered: %s (env=%s)",
-                        intent.project_name, intent.environment_type.value)
+            logger.info(
+                "Project discovered: %s (env=%s)",
+                intent.project_name,
+                intent.environment_type.value,
+            )
         except Exception as exc:
             error_msg = f"Project discovery failed: {exc}"
             logger.error(error_msg)
@@ -302,7 +309,9 @@ class PreflightEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "--version"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode != 0:
                 logger.warning("Python binary not functional: %s", python_bin)
@@ -314,7 +323,9 @@ class PreflightEngine:
         try:
             result = subprocess.run(
                 [str(python_bin), "-m", "pip", "--version"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode != 0:
                 logger.warning("pip not functional in environment: %s", env_path)
@@ -355,16 +366,25 @@ class PreflightEngine:
 
             try:
                 result = subprocess.run(
-                    [str(python_bin), "-c",
-                     f"import {module_name}; print(getattr({module_name}, '__version__', 'ok'))"],
-                    capture_output=True, text=True, timeout=15,
+                    [
+                        str(python_bin),
+                        "-c",
+                        f"import {module_name}; print(getattr({module_name}, '__version__', 'ok'))",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
                 )
                 if result.returncode == 0:
                     version = result.stdout.strip()
                     results.append((pkg, True, f"v{version}"))
                     logger.debug("Smoke test passed: %s (%s)", pkg, version)
                 else:
-                    error = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else "Import failed"
+                    error = (
+                        result.stderr.strip().splitlines()[-1]
+                        if result.stderr.strip()
+                        else "Import failed"
+                    )
                     results.append((pkg, False, error))
                     logger.debug("Smoke test FAILED: %s - %s", pkg, error)
             except subprocess.TimeoutExpired:
@@ -410,8 +430,10 @@ class PreflightEngine:
         warnings_f = [f for f in result.findings if f.severity == FindingSeverity.WARNING]
         info_f = [f for f in result.findings if f.severity == FindingSeverity.INFO]
 
-        lines.append(f"  Findings: {len(critical)} critical, {len(errors_f)} error, "
-                     f"{len(warnings_f)} warning, {len(info_f)} info")
+        lines.append(
+            f"  Findings: {len(critical)} critical, {len(errors_f)} error, "
+            f"{len(warnings_f)} warning, {len(info_f)} info"
+        )
 
         if critical:
             lines.append("")
@@ -478,10 +500,9 @@ class PreflightEngine:
         intent.has_pyproject_toml = (project_dir / "pyproject.toml").exists()
         intent.has_requirements_txt = (project_dir / "requirements.txt").exists()
         intent.has_setup_py = (project_dir / "setup.py").exists()
-        intent.has_conda_env_file = (
-            (project_dir / "environment.yml").exists()
-            or (project_dir / "environment.yaml").exists()
-        )
+        intent.has_conda_env_file = (project_dir / "environment.yml").exists() or (
+            project_dir / "environment.yaml"
+        ).exists()
 
         if intent.has_requirements_txt:
             intent.dependencies = self._read_requirements_txt(project_dir / "requirements.txt")
@@ -568,6 +589,7 @@ class PreflightEngine:
         """Attempt to create or repair the environment."""
         try:
             from envguard.repair import RepairEngine
+
             repair = RepairEngine(self._project_dir, facts, intent)
             new_resolution = repair.repair()
             resolution.success = new_resolution.success
@@ -590,7 +612,9 @@ class PreflightEngine:
         facts.os_name = _platform.system()
         facts.os_version = _platform.mac_ver()[0] or _platform.version()
         facts.os_release = _platform.release()
-        facts.python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        facts.python_version = (
+            f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        )
         facts.python_path = sys.executable
 
         machine = _platform.machine().lower()
@@ -602,14 +626,16 @@ class PreflightEngine:
         else:
             facts.architecture = Architecture.UNKNOWN
 
-        facts.is_macos = (facts.os_name == "Darwin")
+        facts.is_macos = facts.os_name == "Darwin"
 
         # Detect Rosetta
         if facts.is_macos:
             try:
                 result = subprocess.run(
                     ["sysctl", "-n", "sysctl.proc_translated"],
-                    capture_output=True, text=True, timeout=5,
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
                 facts.is_rosetta = result.stdout.strip() == "1"
                 facts.is_native_python = not facts.is_rosetta
@@ -621,7 +647,9 @@ class PreflightEngine:
             try:
                 result = subprocess.run(
                     ["xcode-select", "-p"],
-                    capture_output=True, text=True, timeout=5,
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
                 facts.has_xcode_cli = result.returncode == 0
             except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
@@ -631,7 +659,9 @@ class PreflightEngine:
         try:
             result = subprocess.run(
                 [sys.executable, "-m", "pip", "--version"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             facts.has_pip = result.returncode == 0
             if facts.has_pip:
@@ -643,7 +673,9 @@ class PreflightEngine:
         try:
             result = subprocess.run(
                 ["conda", "--version"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             facts.has_conda = result.returncode == 0
             if facts.has_conda:
@@ -666,6 +698,7 @@ class PreflightEngine:
 
         # Detect shell
         import os as _os
+
         shell = _os.environ.get("SHELL", "")
         if "zsh" in shell:
             facts.shell = ShellType.ZSH
@@ -681,7 +714,7 @@ class PreflightEngine:
     def _normalise_facts(facts: HostFacts) -> None:
         """Ensure extended fields are populated from base fields."""
         if not facts.is_macos:
-            facts.is_macos = (facts.os_name == "Darwin")
+            facts.is_macos = facts.os_name == "Darwin"
         if facts.architecture == Architecture.ARM64:
             facts.is_apple_silicon = True
         if facts.is_macos and facts.is_apple_silicon and not facts.mps_available:
@@ -744,11 +777,13 @@ class PreflightEngine:
 
         try:
             import tomllib
+
             with open(path, "rb") as fh:
                 data = tomllib.load(fh)
         except ImportError:
             try:
                 import tomli as tomllib
+
                 with open(path, "rb") as fh:
                     data = tomllib.load(fh)
             except ImportError:
@@ -813,6 +848,7 @@ class PreflightEngine:
 def _check_connectivity_quick() -> bool:
     """Lightweight TCP connectivity check."""
     import socket
+
     for host in ("pypi.org", "files.pythonhosted.org"):
         try:
             socket.create_connection((host, 443), timeout=3)

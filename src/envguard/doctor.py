@@ -410,9 +410,14 @@ class Doctor:
 
         files_found: list[str] = []
         marker_files = [
-            "pyproject.toml", "setup.py", "setup.cfg",
-            "requirements.txt", "Pipfile", "environment.yml",
-            "poetry.lock", "pixi.toml",
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "requirements.txt",
+            "Pipfile",
+            "environment.yml",
+            "poetry.lock",
+            "pixi.toml",
         ]
         for fname in marker_files:
             if (self.project_dir / fname).exists():
@@ -497,7 +502,9 @@ class Doctor:
             try:
                 result = subprocess.run(
                     [str(python_bin), "--version"],
-                    capture_output=True, text=True, timeout=10,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 if result.returncode == 0:
                     env_py_ver = result.stdout.strip()
@@ -616,9 +623,12 @@ class Doctor:
         # MPS not available - could be due to no PyTorch or no MPS support
         try:
             import torch  # noqa: F401
+
             reason = "PyTorch MPS backend reports unavailable (may need macOS 12.3+)."
         except ImportError:
-            reason = "PyTorch not installed - cannot verify MPS. Install PyTorch for GPU acceleration."
+            reason = (
+                "PyTorch not installed - cannot verify MPS. Install PyTorch for GPU acceleration."
+            )
 
         return {
             "name": "accelerator_support",
@@ -638,7 +648,7 @@ class Doctor:
         for attr in sorted(dir(self)):
             if attr.startswith(prefix) and callable(getattr(self, attr)):
                 # Derive the check name: check_host_system -> host_system
-                methods[attr[len(prefix):]] = getattr(self, attr)
+                methods[attr[len(prefix) :]] = getattr(self, attr)
         return methods
 
     @staticmethod
@@ -652,7 +662,9 @@ class Doctor:
             # Show only first-level string/bool/int values
             parts: list[str] = []
             for k, v in detail.items():
-                if isinstance(v, (str, int, float, bool)) or (isinstance(v, (list, tuple)) and len(v) <= 5):
+                if isinstance(v, (str, int, float, bool)) or (
+                    isinstance(v, (list, tuple)) and len(v) <= 5
+                ):
                     parts.append(f"{k}={v}")
                 elif isinstance(v, dict) and len(v) <= 3:
                     items = ", ".join(f"{dk}={dv}" for dk, dv in list(v.items())[:3])

@@ -20,7 +20,9 @@ class TestPermissionChecker:
     def facts(self) -> HostFacts:
         return HostFacts(
             os_name="Darwin",
-            architecture=__import__("envguard.models", fromlist=["Architecture"]).Architecture.ARM64,
+            architecture=__import__(
+                "envguard.models", fromlist=["Architecture"]
+            ).Architecture.ARM64,
             home_dir=Path("/tmp/test-home"),
         )
 
@@ -57,16 +59,24 @@ class TestPermissionChecker:
         assert isinstance(result, bool)
 
     def test_check_network_access_unreachable(self, checker: PermissionChecker):
-        result, _status = checker.check_network_access("this-domain-does-not-exist-12345.invalid", timeout=2)
+        result, _status = checker.check_network_access(
+            "this-domain-does-not-exist-12345.invalid", timeout=2
+        )
         # Should handle gracefully
         assert isinstance(result, bool)
 
-    def test_check_shell_rc_write_zsh(self, checker: PermissionChecker, tmp_path: Path, monkeypatch):
-        monkeypatch.setattr(checker, "_facts", HostFacts(
-            home_dir=tmp_path,
-            shell=ShellType.ZSH,
-            shell_type=ShellType.ZSH,
-        ))
+    def test_check_shell_rc_write_zsh(
+        self, checker: PermissionChecker, tmp_path: Path, monkeypatch
+    ):
+        monkeypatch.setattr(
+            checker,
+            "_facts",
+            HostFacts(
+                home_dir=tmp_path,
+                shell=ShellType.ZSH,
+                shell_type=ShellType.ZSH,
+            ),
+        )
         result = checker.check_shell_rc_write(ShellType.ZSH)
         assert isinstance(result, PermissionStatus)
 

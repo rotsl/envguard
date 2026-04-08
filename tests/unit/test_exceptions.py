@@ -48,7 +48,6 @@ class TestEnvguardError:
 
 
 class TestPlatformNotSupportedError:
-
     def test_default_message(self):
         err = PlatformNotSupportedError(platform="Linux")
         assert "Linux" in str(err)
@@ -64,7 +63,6 @@ class TestPlatformNotSupportedError:
 
 
 class TestCudaNotSupportedOnMacosError:
-
     def test_default_message(self):
         err = CudaNotSupportedOnMacosError()
         assert "CUDA" in str(err)
@@ -77,7 +75,6 @@ class TestCudaNotSupportedOnMacosError:
 
 
 class TestIncompatibleWheelError:
-
     def test_default_message(self):
         err = IncompatibleWheelError(
             wheel_name="numpy-1.24.0-cp311-cp311-macosx_10_9_x86_64.whl",
@@ -96,7 +93,6 @@ class TestIncompatibleWheelError:
 
 
 class TestDependencyConflictError:
-
     def test_default_message(self):
         err = DependencyConflictError(packages="numpy>=1.24 vs numpy<1.23")
         assert "numpy" in str(err)
@@ -108,7 +104,6 @@ class TestDependencyConflictError:
 
 
 class TestBrokenEnvironmentError:
-
     def test_default_message(self):
         err = BrokenEnvironmentError(env_path="/tmp/.venv", reason="missing pip")
         assert "/tmp/.venv" in str(err)
@@ -121,7 +116,6 @@ class TestBrokenEnvironmentError:
 
 
 class TestRepairError:
-
     def test_default_message(self):
         err = RepairError(operation="recreate_environment", reason="disk full")
         assert "recreate_environment" in str(err)
@@ -134,7 +128,6 @@ class TestRepairError:
 
 
 class TestPreflightError:
-
     def test_default_message(self):
         err = PreflightError(findings_count=3)
         assert "3" in str(err)
@@ -146,7 +139,6 @@ class TestPreflightError:
 
 
 class TestNetworkUnavailableError:
-
     def test_default_message(self):
         err = NetworkUnavailableError()
         assert "Network" in str(err)
@@ -157,14 +149,12 @@ class TestNetworkUnavailableError:
 
 
 class TestVerificationError:
-
     def test_default_message(self):
         err = VerificationError()
         assert "verification" in str(err).lower()
 
 
 class TestPackageManagerNotFoundError:
-
     def test_default_message(self):
         err = PackageManagerNotFoundError(manager_name="conda")
         assert "conda" in str(err)
@@ -176,7 +166,6 @@ class TestPackageManagerNotFoundError:
 
 
 class TestOtherExceptions:
-
     def test_architecture_error(self):
         err = ArchitectureError("arch mismatch")
         assert str(err) == "arch mismatch"

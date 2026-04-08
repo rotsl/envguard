@@ -202,9 +202,7 @@ class TrustManager:
         if trusted:
             recommendation = "Source domain is trusted. Package can be installed."
         elif not domain:
-            recommendation = (
-                "Could not parse domain from URL. Manual verification recommended."
-            )
+            recommendation = "Could not parse domain from URL. Manual verification recommended."
         else:
             recommendation = (
                 f"Domain '{domain}' is NOT in the trusted list. "

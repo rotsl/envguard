@@ -33,13 +33,16 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import AcceleratorTarget
 except ImportError:
+
     class AcceleratorTarget:  # type: ignore[no-redef]
         CPU = "cpu"
         MPS = "mps"
         CUDA = "cuda"
+
 
 logger = get_logger(__name__)
 
@@ -204,16 +207,13 @@ class InferenceEngine:
                 result["python_version"] = str(py_ver)
             for group_name, group_data in poetry.get("group", {}).items():
                 result["extras"][group_name] = [
-                    _format_poetry_dep(n, s)
-                    for n, s in group_data.get("dependencies", {}).items()
+                    _format_poetry_dep(n, s) for n, s in group_data.get("dependencies", {}).items()
                 ]
 
         # Poetry dev-dependencies (legacy)
         dev_deps = poetry.get("dev-dependencies", {})
         if dev_deps:
-            result["extras"]["dev"] = [
-                _format_poetry_dep(n, s) for n, s in dev_deps.items()
-            ]
+            result["extras"]["dev"] = [_format_poetry_dep(n, s) for n, s in dev_deps.items()]
 
         return result
 
@@ -500,11 +500,10 @@ class InferenceEngine:
 
         # If on macOS and only MPS-compatible packages found, recommend MPS
         import sys
+
         if sys.platform == "darwin" and not needs_cuda:
             recommended = AcceleratorTarget.MPS
-            reasons.append(
-                "macOS detected and no CUDA-only packages; recommending MPS"
-            )
+            reasons.append("macOS detected and no CUDA-only packages; recommending MPS")
 
         return {
             "needs_cuda": needs_cuda,
@@ -568,6 +567,7 @@ class InferenceEngine:
 # ------------------------------------------------------------------
 # Module-level helpers
 # ------------------------------------------------------------------
+
 
 def _ast_value_to_python(node: ast.expr) -> Any:
     """Safely convert an AST node to a Python value.

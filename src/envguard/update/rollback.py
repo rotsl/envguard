@@ -20,6 +20,7 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 logger = get_logger(__name__)
 
 
@@ -93,7 +94,8 @@ class RollbackManager:
         self._index[snapshot_id] = {
             "id": snapshot_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "description": description or f"Snapshot before update (v{self._get_current_version()})",
+            "description": description
+            or f"Snapshot before update (v{self._get_current_version()})",
             "version": self._get_current_version(),
             "install_dir": str(install_dir),
             "success": backup_ok,
@@ -147,9 +149,7 @@ class RollbackManager:
 
         if restored:
             # Create a snapshot of the "failed" state for recovery
-            self.create_snapshot(
-                description=f"Auto-snapshot after rollback from {snapshot_id}"
-            )
+            self.create_snapshot(description=f"Auto-snapshot after rollback from {snapshot_id}")
             logger.info("Rollback to snapshot %s completed", snapshot_id)
         else:
             logger.error("Rollback to snapshot %s failed", snapshot_id)
@@ -169,13 +169,15 @@ class RollbackManager:
         snapshots: list[dict] = []
 
         for snap_id, meta in self._index.items():
-            snapshots.append({
-                "id": meta.get("id", snap_id),
-                "timestamp": meta.get("timestamp", ""),
-                "description": meta.get("description", ""),
-                "version": meta.get("version", "unknown"),
-                "success": meta.get("success", False),
-            })
+            snapshots.append(
+                {
+                    "id": meta.get("id", snap_id),
+                    "timestamp": meta.get("timestamp", ""),
+                    "description": meta.get("description", ""),
+                    "version": meta.get("version", "unknown"),
+                    "success": meta.get("success", False),
+                }
+            )
 
         # Sort newest first
         snapshots.sort(key=lambda s: s["timestamp"], reverse=True)
@@ -364,6 +366,7 @@ class RollbackManager:
         """Determine the filesystem path of the envguard package installation."""
         try:
             from importlib.util import find_spec
+
             spec = find_spec("envguard")
             if spec is not None and spec.origin is not None:
                 return Path(spec.origin).resolve().parent
@@ -376,11 +379,13 @@ class RollbackManager:
         """Return the current envguard version string."""
         try:
             from importlib.metadata import version
+
             return version("envguard")
         except Exception:
             pass
         try:
             from envguard import __version__
+
             return __version__
         except (ImportError, AttributeError):
             pass

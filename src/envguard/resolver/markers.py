@@ -18,6 +18,7 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 logger = get_logger(__name__)
 
 
@@ -46,7 +47,7 @@ _OPS: dict[str, type] = {
     ">": operator.gt,
     "<": operator.lt,
     "~=": lambda a, b: _compatible_release(a, b),  # PEP 440 compatible release
-    "===": lambda a, b: str(a).strip('"\'') == str(b).strip('"\''),  # PEP 440 arbitrary equality
+    "===": lambda a, b: str(a).strip("\"'") == str(b).strip("\"'"),  # PEP 440 arbitrary equality
 }
 
 # Regex for a simple marker expression:  <left> <op> <right>
@@ -75,6 +76,7 @@ class MarkerEvaluator:
         self._use_packaging = False
         try:
             from packaging import markers as _markers  # type: ignore[import-untyped]
+
             self._markers_module = _markers
             self._use_packaging = True
         except ImportError:
@@ -129,9 +131,7 @@ class MarkerEvaluator:
             "python_version": ".".join(map(str, sys.version_info[:2])),
             "python_full_version": ".".join(map(str, sys.version_info[:3])),
             "implementation_name": sys.implementation.name,
-            "implementation_version": ".".join(
-                str(v) for v in sys.implementation.version[:3]
-            ),
+            "implementation_version": ".".join(str(v) for v in sys.implementation.version[:3]),
         }
 
     def parse_marker(self, marker: str) -> dict:
@@ -156,11 +156,13 @@ class MarkerEvaluator:
 
             m = _SIMPLE_MARKER_RE.match(part)
             if m:
-                expressions.append({
-                    "left": m.group("left"),
-                    "op": m.group("op"),
-                    "right": m.group("right"),
-                })
+                expressions.append(
+                    {
+                        "left": m.group("left"),
+                        "op": m.group("op"),
+                        "right": m.group("right"),
+                    }
+                )
             else:
                 expressions.append({"raw": part, "parse_error": True})
 
@@ -212,6 +214,7 @@ class MarkerEvaluator:
     def _evaluate_with_packaging(self, marker: str, env: dict) -> bool:
         """Evaluate using the ``packaging.markers`` module."""
         from packaging.markers import Marker  # type: ignore[import-untyped]
+
         return Marker(marker).evaluate(env)
 
     def _evaluate_simple_marker(self, marker: str, env: dict) -> bool:
@@ -307,6 +310,7 @@ class MarkerEvaluator:
 # Module-level helpers
 # ------------------------------------------------------------------
 
+
 def _compatible_release(version: str, spec: str) -> bool:
     """Implement PEP 440 ``~=`` (compatible release) operator.
 
@@ -337,10 +341,7 @@ def _compatible_release(version: str, spec: str) -> bool:
     # Must match prefix up to len(spec_parts) - 1
     prefix_len = len(spec_parts) - 1
     try:
-        return (
-            [int(p) for p in ver_parts[:prefix_len]]
-            == [int(p) for p in spec_parts[:prefix_len]]
-        )
+        return [int(p) for p in ver_parts[:prefix_len]] == [int(p) for p in spec_parts[:prefix_len]]
     except ValueError:
         return ver_parts[:prefix_len] == spec_parts[:prefix_len]
 
@@ -348,4 +349,5 @@ def _compatible_release(version: str, spec: str) -> bool:
 def os_name() -> str:
     """Return ``os.name`` - one of ``'posix'``, ``'nt'``, ``'java'``."""
     import os
+
     return os.name

@@ -108,9 +108,7 @@ class SignatureVerifier:
                 hasher.update(chunk)
 
         digest = hasher.hexdigest()
-        logger.debug(
-            "Computed %s hash of %s: %s", algo, path.name, digest
-        )
+        logger.debug("Computed %s hash of %s: %s", algo, path.name, digest)
         return digest
 
     # ------------------------------------------------------------------
@@ -144,13 +142,9 @@ class SignatureVerifier:
         try:
             computed = cls.compute_file_hash(file_path, algorithm=algo)
         except FileNotFoundError as exc:
-            raise VerificationError(
-                f"Cannot verify hash: file not found - {exc}"
-            ) from exc
+            raise VerificationError(f"Cannot verify hash: file not found - {exc}") from exc
         except OSError as exc:
-            raise VerificationError(
-                f"Cannot verify hash: read error - {exc}"
-            ) from exc
+            raise VerificationError(f"Cannot verify hash: read error - {exc}") from exc
 
         if computed != normalized_expected:
             logger.warning(
@@ -165,9 +159,7 @@ class SignatureVerifier:
                 f"expected {normalized_expected}, got {computed}"
             )
 
-        logger.info(
-            "Hash verified OK for %s (%s)", file_path, algo
-        )
+        logger.info("Hash verified OK for %s (%s)", file_path, algo)
         return True
 
     # ------------------------------------------------------------------

@@ -28,6 +28,7 @@ from envguard.models import (
 # HostFacts fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def macos_host_facts() -> HostFacts:
     """Return a HostFacts instance mimicking an Apple Silicon Mac."""
@@ -121,6 +122,7 @@ def offline_host_facts() -> HostFacts:
 # ProjectIntent fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def pip_project_intent(tmp_path: Path) -> ProjectIntent:
     """Return a ProjectIntent for a simple pip-based project."""
@@ -195,6 +197,7 @@ def mps_project_intent(tmp_path: Path) -> ProjectIntent:
 # RuleFinding fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def cuda_finding() -> RuleFinding:
     """Return a CRITICAL finding for CUDA on macOS."""
@@ -226,13 +229,16 @@ def warning_finding() -> RuleFinding:
 # Project file fixtures
 # ---------------------------------------------------------------------------
 
+
 def _write_toml(path: Path, data: dict) -> None:
     """Write a dict as TOML to *path* using tomli_w."""
     try:
         import tomli_w
+
         path.write_bytes(tomli_w.dumps(data).encode())
     except ImportError:
         import json
+
         path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
@@ -240,15 +246,21 @@ def _write_toml(path: Path, data: dict) -> None:
 def pip_simple_project(tmp_path: Path) -> Path:
     """Create a minimal pip-based project with pyproject.toml and requirements.txt."""
     pyproject = tmp_path / "pyproject.toml"
-    _write_toml(pyproject, {
-        "build-system": {"requires": ["setuptools>=68.0"], "build-backend": "setuptools.build_meta"},
-        "project": {
-            "name": "pip-simple",
-            "version": "0.1.0",
-            "requires-python": ">=3.10",
-            "dependencies": ["requests>=2.28", "numpy>=1.24"],
+    _write_toml(
+        pyproject,
+        {
+            "build-system": {
+                "requires": ["setuptools>=68.0"],
+                "build-backend": "setuptools.build_meta",
+            },
+            "project": {
+                "name": "pip-simple",
+                "version": "0.1.0",
+                "requires-python": ">=3.10",
+                "dependencies": ["requests>=2.28", "numpy>=1.24"],
+            },
         },
-    })
+    )
     reqs = tmp_path / "requirements.txt"
     reqs.write_text("requests>=2.28\nnumpy>=1.24\n")
     reqs_dev = tmp_path / "requirements-dev.txt"
@@ -287,11 +299,7 @@ def conda_project(tmp_path: Path) -> Path:
 def broken_mixed_project(tmp_path: Path) -> Path:
     """Create an intentionally broken mixed pip/conda project."""
     env_yml = tmp_path / "environment.yml"
-    env_yml.write_text(
-        "name: broken-mixed\n"
-        "dependencies:\n"
-        "  - numpy>=1.24\n"
-    )
+    env_yml.write_text("name: broken-mixed\ndependencies:\n  - numpy>=1.24\n")
     reqs = tmp_path / "requirements.txt"
     reqs.write_text("numpy>=1.26  # conflicts with conda's numpy version\n")
     return tmp_path
@@ -338,6 +346,7 @@ def sample_environment_yml() -> str:
 # ---------------------------------------------------------------------------
 # Helper fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def envguard_project_dir(tmp_path: Path) -> Path:

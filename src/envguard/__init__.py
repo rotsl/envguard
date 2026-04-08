@@ -214,6 +214,7 @@ def check_network_connectivity(url: str = PYPI_URL, timeout: int = 5) -> bool:
     try:
         import urllib.error
         import urllib.request
+
         req = urllib.request.Request(url, method="HEAD")
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status < 500
@@ -221,6 +222,7 @@ def check_network_connectivity(url: str = PYPI_URL, timeout: int = 5) -> bool:
         # Last resort: try a simple socket connection
         try:
             import socket
+
             host = url.replace("https://", "").replace("http://", "").split("/")[0]
             with socket.create_connection((host, 443), timeout=timeout):
                 return True
@@ -238,7 +240,11 @@ def check_xcode_tools() -> dict[str, Any]:
             path = result.stdout.strip()
             return {"installed": True, "path": path, "message": f"Found at {path}"}
         else:
-            return {"installed": False, "path": None, "message": "Not installed. Run: xcode-select --install"}
+            return {
+                "installed": False,
+                "path": None,
+                "message": "Not installed. Run: xcode-select --install",
+            }
     except FileNotFoundError:
         return {"installed": False, "path": None, "message": "xcode-select not found"}
     except subprocess.TimeoutExpired:
@@ -249,6 +255,7 @@ def check_mps_available() -> bool:
     """Check if Apple Metal Performance Shaders (MPS) is available for PyTorch."""
     try:
         import torch
+
         return hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
     except ImportError:
         return False

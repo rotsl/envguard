@@ -19,6 +19,7 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 logger = get_logger(__name__)
 
 
@@ -71,9 +72,7 @@ class LaunchAgentManager:
             ET.SubElement(parent, "key").text = key
             ET.SubElement(parent, "integer").text = str(value)
 
-        def _add_key_array_of_strings(
-            parent: ET.Element, key: str, values: list[str]
-        ) -> None:
+        def _add_key_array_of_strings(parent: ET.Element, key: str, values: list[str]) -> None:
             ET.SubElement(parent, "key").text = key
             arr = ET.SubElement(parent, "array")
             for v in values:
@@ -126,7 +125,7 @@ class LaunchAgentManager:
         ET.indent(plist_el, space="    ")
         xml_str = ET.tostring(plist_el, encoding="unicode", xml_declaration=True)
         # Ensure the XML declaration uses the proper format
-        if not xml_str.startswith('<?xml'):
+        if not xml_str.startswith("<?xml"):
             xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_str
         return xml_str
 
@@ -236,12 +235,7 @@ class LaunchAgentManager:
 
     def get_plist_path(self) -> Path:
         """Return the path to the LaunchAgent plist file."""
-        return (
-            self._home
-            / "Library"
-            / "LaunchAgents"
-            / self.PLIST_NAME
-        )
+        return self._home / "Library" / "LaunchAgents" / self.PLIST_NAME
 
     def get_log_paths(self) -> dict[str, str]:
         """Return paths to the LaunchAgent's stdout and stderr log files."""

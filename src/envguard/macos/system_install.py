@@ -190,9 +190,7 @@ class SystemInstaller:
             return True
 
         except PermissionError as exc:
-            logger.error(
-                "Permission denied uninstalling from %s: %s", self._prefix, exc
-            )
+            logger.error("Permission denied uninstalling from %s: %s", self._prefix, exc)
             return False
         except OSError as exc:
             logger.error("OS error uninstalling from %s: %s", self._prefix, exc)
@@ -267,9 +265,7 @@ class SystemInstaller:
             check_path = target if target.exists() else target.parent
             if not check_path.exists():
                 # Fall back: assume system paths need privilege
-                return str(self._prefix).startswith("/usr") or str(
-                    self._prefix
-                ).startswith("/opt")
+                return str(self._prefix).startswith("/usr") or str(self._prefix).startswith("/opt")
 
             stat_info = os.stat(check_path)
             euid = os.geteuid()
@@ -289,9 +285,7 @@ class SystemInstaller:
         except OSError as exc:
             logger.debug("Privilege check failed for %s: %s", target, exc)
             # Assume privilege needed on error for system paths
-            return str(self._prefix).startswith("/usr") or str(
-                self._prefix
-            ).startswith("/opt")
+            return str(self._prefix).startswith("/usr") or str(self._prefix).startswith("/opt")
 
     def get_required_privileges(self) -> list[str]:
         """Return a human-readable list of privileges that may be required.
@@ -304,17 +298,12 @@ class SystemInstaller:
         privileges: list[str] = []
 
         if location["requires_privilege"]:
-            privileges.append(
-                "write access to installation prefix "
-                f"({self._prefix})"
-            )
+            privileges.append(f"write access to installation prefix ({self._prefix})")
 
         # Check LaunchAgent directory
         launch_dir = MacPaths.user_launch_agent_dir
         if launch_dir.exists() and not os.access(launch_dir, os.W_OK):
-            privileges.append(
-                f"write access to {launch_dir} (for LaunchAgent plist)"
-            )
+            privileges.append(f"write access to {launch_dir} (for LaunchAgent plist)")
 
         # Check system-level path
         if not self._user_level:

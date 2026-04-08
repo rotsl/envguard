@@ -80,7 +80,9 @@ class TestHostDetector:
     @patch("envguard.detect.sys")
     def test_detect_xcode_cli(self, mock_sys, mock_run):
         mock_sys.platform = "darwin"
-        mock_run.return_value = MagicMock(returncode=0, stdout="/Library/Developer/CommandLineTools\n", stderr="")
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="/Library/Developer/CommandLineTools\n", stderr=""
+        )
         detector = HostDetector()
         assert detector.detect_xcode_cli() is True
 
@@ -97,7 +99,9 @@ class TestHostDetector:
     def test_detect_xcode_cli_with_subprocess(self, mock_sys, mock_run):
         """Test with xcode-select -p returning a path."""
         mock_sys.platform = "darwin"
-        mock_run.return_value = MagicMock(returncode=0, stdout="/Applications/Xcode.app\n", stderr="")
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="/Applications/Xcode.app\n", stderr=""
+        )
         detector = HostDetector()
         assert detector.detect_xcode_cli() is True
 
@@ -141,6 +145,7 @@ class TestDetectHost:
 
     def test_detect_host_returns_facts(self):
         from envguard.detect import detect_host
+
         facts = detect_host()
         assert hasattr(facts, "os_name")
         assert hasattr(facts, "architecture")
@@ -148,5 +153,6 @@ class TestDetectHost:
 
     def test_detect_host_with_project(self, tmp_path):
         from envguard.detect import detect_host
+
         facts = detect_host(project_dir=tmp_path)
         assert facts.project_dir is None

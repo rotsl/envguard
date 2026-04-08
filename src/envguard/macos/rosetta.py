@@ -115,9 +115,7 @@ class RosettaDetector:
 
         resolved = shutil.which(python_path)
         if resolved is None:
-            raise ArchitectureError(
-                f"Python interpreter not found: {python_path}"
-            )
+            raise ArchitectureError(f"Python interpreter not found: {python_path}")
 
         try:
             result = subprocess.run(
@@ -131,14 +129,11 @@ class RosettaDetector:
                 f"Timed out detecting architecture for {resolved}"
             ) from exc
         except OSError as exc:
-            raise ArchitectureError(
-                f"Failed to run interpreter {resolved}: {exc}"
-            ) from exc
+            raise ArchitectureError(f"Failed to run interpreter {resolved}: {exc}") from exc
 
         if result.returncode != 0:
             raise ArchitectureError(
-                f"Interpreter {resolved} returned non-zero exit code: "
-                f"{result.stderr.strip()}"
+                f"Interpreter {resolved} returned non-zero exit code: {result.stderr.strip()}"
             )
 
         machine = result.stdout.strip().lower()
@@ -190,14 +185,10 @@ class RosettaDetector:
         if not is_apple_silicon:
             # On Intel Macs there is no Rosetta risk.
             risk_level = "none"
-            recommendation = (
-                "Running on Intel Mac; no Rosetta translation concerns."
-            )
+            recommendation = "Running on Intel Mac; no Rosetta translation concerns."
         elif is_native:
             risk_level = "none"
-            recommendation = (
-                "Python interpreter matches native Apple Silicon architecture."
-            )
+            recommendation = "Python interpreter matches native Apple Silicon architecture."
         elif python_arch == Architecture.X86_64 and host_arch == Architecture.ARM64:
             risk_level = "medium"
             recommendation = (
@@ -208,8 +199,7 @@ class RosettaDetector:
         elif python_arch == Architecture.UNKNOWN:
             risk_level = "low"
             recommendation = (
-                "Could not determine Python architecture. "
-                "Manual verification is recommended."
+                "Could not determine Python architecture. Manual verification is recommended."
             )
         else:
             risk_level = "high"

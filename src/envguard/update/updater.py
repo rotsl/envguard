@@ -18,9 +18,11 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import UpdateCheckResult, UpdateManifest
 except ImportError:
+
     class UpdateManifest:  # type: ignore[no-redef]
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
@@ -28,6 +30,7 @@ except ImportError:
     class UpdateCheckResult:  # type: ignore[no-redef]
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
+
 
 try:
     from envguard.update.manifest import ManifestParser
@@ -58,9 +61,7 @@ class UpdateManager:
 
     def __init__(self, config: dict | None = None) -> None:
         self._config = config or {}
-        self._manifest_url = self._config.get(
-            "manifest_url", self.DEFAULT_MANIFEST_URL
-        )
+        self._manifest_url = self._config.get("manifest_url", self.DEFAULT_MANIFEST_URL)
         self._cache_dir = Path.home() / ".envguard" / "cache" / "updates"
         self._cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -100,6 +101,7 @@ class UpdateManager:
         """
         try:
             from importlib.metadata import version
+
             return version("envguard")
         except Exception:
             pass
@@ -107,6 +109,7 @@ class UpdateManager:
         # Try reading __version__ from the package
         try:
             from envguard import __version__
+
             return __version__
         except (ImportError, AttributeError):
             pass
@@ -303,12 +306,11 @@ class UpdateManager:
                 for member in zf.namelist():
                     member_path = (staging_dir / member).resolve()
                     if not str(member_path).startswith(str(staging_dir.resolve())):
-                        raise ValueError(
-                            f"Unsafe archive member rejected (zip-slip): {member}"
-                        )
+                        raise ValueError(f"Unsafe archive member rejected (zip-slip): {member}")
                 zf.extractall(staging_dir)
         elif str(download_path).endswith(".tar.gz") or str(download_path).endswith(".tgz"):
             import tarfile
+
             with tarfile.open(download_path, "r:gz") as tf:
                 # Guard against tar-slip
                 for member in tf.getmembers():
@@ -334,6 +336,7 @@ class UpdateManager:
         # Find the current package installation directory
         try:
             from importlib.util import find_spec
+
             spec = find_spec("envguard")
             if spec is None or spec.origin is None:
                 logger.error("Cannot determine envguard installation path")
@@ -359,9 +362,7 @@ class UpdateManager:
             for item in src_envguard.iterdir():
                 dest = (install_dir / item.name).resolve()
                 if not str(dest).startswith(str(install_dir_resolved)):
-                    raise ValueError(
-                        f"Unsafe update path rejected (traversal): {item.name}"
-                    )
+                    raise ValueError(f"Unsafe update path rejected (traversal): {item.name}")
                 if item.is_dir():
                     if dest.exists():
                         shutil.rmtree(dest)

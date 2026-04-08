@@ -207,9 +207,7 @@ class ProjectLifecycle:
             result.checks["venv"] = (True, "venv module is available")
         else:
             result.checks["venv"] = (False, "venv module not available")
-            result.warnings.append(
-                "venv module not available; consider installing python3-venv"
-            )
+            result.warnings.append("venv module not available; consider installing python3-venv")
 
         # Check: write permission
         if facts.project_dir_writable:
@@ -230,13 +228,9 @@ class ProjectLifecycle:
             result.checks["network"] = (True, "pypi.org is reachable")
         elif facts.network_available is False:
             result.checks["network"] = (False, "pypi.org is not reachable")
-            result.warnings.append(
-                "No network connectivity; offline installation may be needed"
-            )
+            result.warnings.append("No network connectivity; offline installation may be needed")
             if not intent.has_wheelhouse:
-                result.warnings.append(
-                    "No wheelhouse found for offline installation"
-                )
+                result.warnings.append("No wheelhouse found for offline installation")
         else:
             result.checks["network"] = (True, "Network not checked")
 
@@ -247,9 +241,7 @@ class ProjectLifecycle:
             else:
                 result.checks["conda"] = (False, "Conda/mamba not installed")
                 result.passed = False
-                result.errors.append(
-                    "Project requires conda/mamba but neither is installed"
-                )
+                result.errors.append("Project requires conda/mamba but neither is installed")
 
         # Check: Python version compatibility
         if intent.python_version_required and facts.python_version != "unknown":
@@ -258,8 +250,7 @@ class ProjectLifecycle:
             if req and avail and req > avail:
                 result.checks["python_version"] = (
                     False,
-                    f"Need Python {intent.python_version_required}, "
-                    f"have {facts.python_version}",
+                    f"Need Python {intent.python_version_required}, have {facts.python_version}",
                 )
                 result.warnings.append(
                     f"Python version mismatch: need {intent.python_version_required}, "
@@ -268,8 +259,7 @@ class ProjectLifecycle:
             else:
                 result.checks["python_version"] = (
                     True,
-                    f"Python {facts.python_version} satisfies "
-                    f"{intent.python_version_required}",
+                    f"Python {facts.python_version} satisfies {intent.python_version_required}",
                 )
 
         # Check: macOS-specific
@@ -280,8 +270,7 @@ class ProjectLifecycle:
                     "Xcode CLI tools not installed",
                 )
                 result.warnings.append(
-                    "Xcode CLI tools not installed; "
-                    "native extension compilation may fail"
+                    "Xcode CLI tools not installed; native extension compilation may fail"
                 )
             else:
                 result.checks["xcode_cli"] = (
@@ -291,7 +280,9 @@ class ProjectLifecycle:
 
         logger.info(
             "Preflight complete: passed=%s, warnings=%d, errors=%d",
-            result.passed, len(result.warnings), len(result.errors),
+            result.passed,
+            len(result.warnings),
+            len(result.errors),
         )
         return result
 
@@ -503,8 +494,7 @@ class ProjectLifecycle:
         elif any_fail:
             # Distinguish degraded from unhealthy
             critical_fails = [
-                ok for k, (ok, _) in report.checks.items()
-                if k in ("env_dir", "python")
+                ok for k, (ok, _) in report.checks.items() if k in ("env_dir", "python")
             ]
             report.status = (
                 HealthStatus.UNHEALTHY
@@ -515,9 +505,7 @@ class ProjectLifecycle:
         logger.info("Health check: %s", report.status.value)
         return report
 
-    def _check_dependencies(
-        self, report: HealthReport, python_bin: Path
-    ) -> bool:
+    def _check_dependencies(self, report: HealthReport, python_bin: Path) -> bool:
         """Check whether project dependencies are installed.
 
         Updates the report's missing_packages and checks dict.
@@ -553,12 +541,10 @@ class ProjectLifecycle:
             )
             if proc.returncode == 0:
                 import json as _json
+
                 try:
                     installed = _json.loads(proc.stdout)
-                    installed_names = {
-                        p["name"].lower().replace("-", "_")
-                        for p in installed
-                    }
+                    installed_names = {p["name"].lower().replace("-", "_") for p in installed}
                     for pkg in pkg_names:
                         normalised = pkg.lower().replace("-", "_")
                         if normalised not in installed_names:
@@ -591,7 +577,7 @@ class ProjectLifecycle:
                 False,
                 f"Missing {len(missing)} of {len(pkg_names)} packages: "
                 f"{', '.join(missing[:5])}"
-                + (f" ... (+{len(missing)-5} more)" if len(missing) > 5 else ""),
+                + (f" ... (+{len(missing) - 5} more)" if len(missing) > 5 else ""),
             )
         return ok
 
@@ -655,9 +641,7 @@ class ProjectLifecycle:
                         )
                         if proc.returncode == 0:
                             frozen["packages"] = [
-                                line.strip()
-                                for line in proc.stdout.splitlines()
-                                if line.strip()
+                                line.strip() for line in proc.stdout.splitlines() if line.strip()
                             ]
                     except (OSError, subprocess.TimeoutExpired) as exc:
                         frozen["packages_error"] = str(exc)
@@ -686,6 +670,7 @@ class ProjectLifecycle:
                     )
                     if proc.returncode == 0:
                         import json as _json
+
                         frozen["packages_detailed"] = _json.loads(proc.stdout)
                 except Exception:
                     pass
@@ -752,15 +737,9 @@ class ProjectLifecycle:
                 "created_at": rec.created_at,
                 "env_exists": env_path.is_dir(),
                 "findings_count": len(rec.findings),
-                "errors": [
-                    f.message
-                    for f in rec.findings
-                    if f.severity == FindingSeverity.ERROR
-                ],
+                "errors": [f.message for f in rec.findings if f.severity == FindingSeverity.ERROR],
                 "warnings": [
-                    f.message
-                    for f in rec.findings
-                    if f.severity == FindingSeverity.WARNING
+                    f.message for f in rec.findings if f.severity == FindingSeverity.WARNING
                 ],
             }
         else:
@@ -832,13 +811,15 @@ class ProjectLifecycle:
                 if proc.returncode != 0:
                     logger.error(
                         "Step %d failed (exit code %d): %s\nstdout: %s\nstderr: %s",
-                        i + 1, proc.returncode, description,
+                        i + 1,
+                        proc.returncode,
+                        description,
                         proc.stdout[-500:] if proc.stdout else "",
                         proc.stderr[-500:] if proc.stderr else "",
                     )
                     raise BrokenEnvironmentError(
                         env_path=str(env_path),
-                        reason=f"Step {i+1} failed with exit code {proc.returncode} ({action})",
+                        reason=f"Step {i + 1} failed with exit code {proc.returncode} ({action})",
                     )
 
                 logger.debug("Step %d completed successfully", i + 1)
@@ -847,7 +828,7 @@ class ProjectLifecycle:
                 logger.error("Step %d error: %s", i + 1, exc)
                 raise BrokenEnvironmentError(
                     env_path=str(env_path),
-                    reason=f"Step {i+1} error: {exc}",
+                    reason=f"Step {i + 1} error: {exc}",
                 ) from exc
 
         # Verify the environment was created
@@ -871,6 +852,7 @@ class ProjectLifecycle:
             A list of argument strings.
         """
         import shlex
+
         try:
             return shlex.split(command)
         except ValueError:
@@ -888,6 +870,7 @@ class ProjectLifecycle:
             A tuple of ints, or None.
         """
         import re as _re
+
         match = _re.match(r"(\d+)\.(\d+)", version_str.strip())
         if match:
             return (int(match.group(1)), int(match.group(2)))

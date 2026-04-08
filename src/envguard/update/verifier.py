@@ -21,12 +21,15 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import UpdateManifest
 except ImportError:
+
     class UpdateManifest:  # type: ignore[no-redef]
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
+
 
 logger = get_logger(__name__)
 
@@ -166,9 +169,7 @@ class UpdateVerifier:
         algorithm = getattr(manifest, "checksum_algorithm", "sha256")
 
         if checksum:
-            results["checksum_ok"] = self.verify_checksum(
-                file_path, checksum, algorithm
-            )
+            results["checksum_ok"] = self.verify_checksum(file_path, checksum, algorithm)
         else:
             logger.error("No checksum in manifest - refusing to install unverified update")
             results["checksum_ok"] = False

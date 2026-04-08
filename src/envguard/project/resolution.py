@@ -233,9 +233,7 @@ class ResolutionManager:
                 return AcceleratorTarget.MPS
             # CUDA is not available on macOS
             if AcceleratorTarget.CUDA.value in targets:
-                logger.debug(
-                    "CUDA requested but not available on macOS; falling back to CPU"
-                )
+                logger.debug("CUDA requested but not available on macOS; falling back to CPU")
                 return AcceleratorTarget.CPU
 
         # If CUDA is available and needed
@@ -265,72 +263,86 @@ class ResolutionManager:
         steps: list[dict[str, str]] = []
 
         if env_type in (EnvironmentType.CONDA, EnvironmentType.MAMBA):
-            steps.append({
-                "action": "create_conda_env",
-                "description": f"Create {env_type.value} environment with Python {py_ver}",
-                "command": self._conda_create_cmd(py_ver, env_type, env_path),
-            })
-            steps.append({
-                "action": "activate_conda_env",
-                "description": "Activate the conda environment",
-                "command": f"conda activate {env_path}",
-            })
+            steps.append(
+                {
+                    "action": "create_conda_env",
+                    "description": f"Create {env_type.value} environment with Python {py_ver}",
+                    "command": self._conda_create_cmd(py_ver, env_type, env_path),
+                }
+            )
+            steps.append(
+                {
+                    "action": "activate_conda_env",
+                    "description": "Activate the conda environment",
+                    "command": f"conda activate {env_path}",
+                }
+            )
             if self.intent.dependencies:
-                steps.append({
-                    "action": "install_dependencies",
-                    "description": f"Install {len(self.intent.dependencies)} dependencies",
-                    "command": "conda install --yes " + " ".join(
-                        f'"{d}"' for d in self.intent.dependencies[:20]
-                    ),
-                })
+                steps.append(
+                    {
+                        "action": "install_dependencies",
+                        "description": f"Install {len(self.intent.dependencies)} dependencies",
+                        "command": "conda install --yes "
+                        + " ".join(f'"{d}"' for d in self.intent.dependencies[:20]),
+                    }
+                )
             # Install remaining deps with pip if needed
             if pkg_mgr == PackageManager.PIP and self.intent.dependencies:
-                steps.append({
-                    "action": "pip_install_dependencies",
-                    "description": "Install pip-only dependencies",
-                    "command": "pip install " + " ".join(
-                        f'"{d}"' for d in self.intent.dependencies[:20]
-                    ),
-                })
+                steps.append(
+                    {
+                        "action": "pip_install_dependencies",
+                        "description": "Install pip-only dependencies",
+                        "command": "pip install "
+                        + " ".join(f'"{d}"' for d in self.intent.dependencies[:20]),
+                    }
+                )
         else:
             # venv-based
-            steps.append({
-                "action": "create_venv",
-                "description": f"Create virtual environment with Python {py_ver}",
-                "command": f"python3 -m venv {env_path}",
-            })
-            steps.append({
-                "action": "upgrade_pip",
-                "description": "Upgrade pip in the virtual environment",
-                "command": f"{env_path / 'bin' / 'pip'} install --upgrade pip",
-            })
+            steps.append(
+                {
+                    "action": "create_venv",
+                    "description": f"Create virtual environment with Python {py_ver}",
+                    "command": f"python3 -m venv {env_path}",
+                }
+            )
+            steps.append(
+                {
+                    "action": "upgrade_pip",
+                    "description": "Upgrade pip in the virtual environment",
+                    "command": f"{env_path / 'bin' / 'pip'} install --upgrade pip",
+                }
+            )
             if self.intent.dependencies:
-                steps.append({
-                    "action": "install_dependencies",
-                    "description": f"Install {len(self.intent.dependencies)} dependencies",
-                    "command": f"{env_path / 'bin' / 'pip'} install " + " ".join(
-                        f'"{d}"' for d in self.intent.dependencies[:20]
-                    ),
-                })
+                steps.append(
+                    {
+                        "action": "install_dependencies",
+                        "description": f"Install {len(self.intent.dependencies)} dependencies",
+                        "command": f"{env_path / 'bin' / 'pip'} install "
+                        + " ".join(f'"{d}"' for d in self.intent.dependencies[:20]),
+                    }
+                )
             if self.intent.dev_dependencies:
-                steps.append({
-                    "action": "install_dev_dependencies",
-                    "description": f"Install {len(self.intent.dev_dependencies)} dev dependencies",
-                    "command": f"{env_path / 'bin' / 'pip'} install " + " ".join(
-                        f'"{d}"' for d in self.intent.dev_dependencies[:20]
-                    ),
-                })
+                steps.append(
+                    {
+                        "action": "install_dev_dependencies",
+                        "description": f"Install {len(self.intent.dev_dependencies)} dev dependencies",
+                        "command": f"{env_path / 'bin' / 'pip'} install "
+                        + " ".join(f'"{d}"' for d in self.intent.dev_dependencies[:20]),
+                    }
+                )
 
         # Wheelhouse
         if self.intent.has_wheelhouse and self.intent.wheelhouse_path:
-            steps.append({
-                "action": "install_from_wheelhouse",
-                "description": f"Install wheels from {self.intent.wheelhouse_path}",
-                "command": (
-                    f"{env_path / 'bin' / 'pip'} install --no-index "
-                    f"--find-links {self.intent.wheelhouse_path} ."
-                ),
-            })
+            steps.append(
+                {
+                    "action": "install_from_wheelhouse",
+                    "description": f"Install wheels from {self.intent.wheelhouse_path}",
+                    "command": (
+                        f"{env_path / 'bin' / 'pip'} install --no-index "
+                        f"--find-links {self.intent.wheelhouse_path} ."
+                    ),
+                }
+            )
 
         plan: dict[str, Any] = {
             "project_dir": str(self.project_dir),
@@ -341,9 +353,7 @@ class ResolutionManager:
             "environment_path": str(env_path),
             "dependency_count": self.intent.dependency_count,
             "steps": steps,
-            "estimated_disk_mb": max(
-                50, self.intent.dependency_count * 15
-            ),
+            "estimated_disk_mb": max(50, self.intent.dependency_count * 15),
         }
 
         return plan
@@ -365,84 +375,97 @@ class ResolutionManager:
 
         # Check Python version
         if resolution.python_version == "unknown":
-            findings.append(RuleFinding(
-                rule_id="resolution.python-version",
-                severity=FindingSeverity.ERROR,
-                message="Could not determine a suitable Python version",
-            ))
+            findings.append(
+                RuleFinding(
+                    rule_id="resolution.python-version",
+                    severity=FindingSeverity.ERROR,
+                    message="Could not determine a suitable Python version",
+                )
+            )
 
         # Check for unsupported features on macOS
         if (
             self.facts.os_name == "Darwin"
             and resolution.accelerator_target == AcceleratorTarget.CUDA
         ):
-            findings.append(RuleFinding(
-                rule_id="resolution.cuda-on-macos",
-                severity=FindingSeverity.ERROR,
-                message="CUDA acceleration is not available on macOS",
-                details={"suggestion": "Use MPS or CPU instead"},
-            ))
+            findings.append(
+                RuleFinding(
+                    rule_id="resolution.cuda-on-macos",
+                    severity=FindingSeverity.ERROR,
+                    message="CUDA acceleration is not available on macOS",
+                    details={"suggestion": "Use MPS or CPU instead"},
+                )
+            )
 
         # Check that the package manager is available
         if resolution.package_manager == PackageManager.CONDA and not self.facts.has_conda:
-            findings.append(RuleFinding(
-                rule_id="resolution.conda-not-available",
-                severity=FindingSeverity.ERROR,
-                message="Conda is required but not installed",
-                details={"suggestion": "Install miniconda or switch to pip"},
-            ))
+            findings.append(
+                RuleFinding(
+                    rule_id="resolution.conda-not-available",
+                    severity=FindingSeverity.ERROR,
+                    message="Conda is required but not installed",
+                    details={"suggestion": "Install miniconda or switch to pip"},
+                )
+            )
 
         if resolution.package_manager == PackageManager.MAMBA and not self.facts.has_mamba:
-            findings.append(RuleFinding(
-                rule_id="resolution.mamba-not-available",
-                severity=FindingSeverity.WARNING,
-                message="Mamba is preferred but not installed; falling back to conda",
-                details={"suggestion": "Install mamba via conda"},
-            ))
+            findings.append(
+                RuleFinding(
+                    rule_id="resolution.mamba-not-available",
+                    severity=FindingSeverity.WARNING,
+                    message="Mamba is preferred but not installed; falling back to conda",
+                    details={"suggestion": "Install mamba via conda"},
+                )
+            )
 
         # Check project directory write permission
         if not self.facts.project_dir_writable:
-            findings.append(RuleFinding(
-                rule_id="resolution.project-dir-writable",
-                severity=FindingSeverity.ERROR,
-                message="Project directory is not writable",
-                details={"path": str(self.project_dir)},
-            ))
+            findings.append(
+                RuleFinding(
+                    rule_id="resolution.project-dir-writable",
+                    severity=FindingSeverity.ERROR,
+                    message="Project directory is not writable",
+                    details={"path": str(self.project_dir)},
+                )
+            )
 
         # Check network for initial dependency installation
         if self.facts.network_available is False and not self.intent.has_wheelhouse:
-            findings.append(RuleFinding(
-                rule_id="resolution.network-unavailable",
-                severity=FindingSeverity.WARNING,
-                message="Network is unavailable and no wheelhouse exists; "
-                        "offline installation may fail",
-            ))
+            findings.append(
+                RuleFinding(
+                    rule_id="resolution.network-unavailable",
+                    severity=FindingSeverity.WARNING,
+                    message="Network is unavailable and no wheelhouse exists; "
+                    "offline installation may fail",
+                )
+            )
 
         # Check Python availability
         if resolution.python_version != "unknown":
             sys_ver = self._parse_version_tuple(self.facts.python_version)
             req_ver = self._parse_version_tuple(resolution.python_version)
             if sys_ver and req_ver and req_ver > sys_ver:
-                findings.append(RuleFinding(
-                    rule_id="resolution.python-version-mismatch",
-                    severity=FindingSeverity.WARNING,
-                    message=(
-                        f"Required Python {resolution.python_version} is newer "
-                        f"than system Python {self.facts.python_version}"
-                    ),
-                    details={"suggestion": "Install the required Python version via pyenv"},
-                ))
+                findings.append(
+                    RuleFinding(
+                        rule_id="resolution.python-version-mismatch",
+                        severity=FindingSeverity.WARNING,
+                        message=(
+                            f"Required Python {resolution.python_version} is newer "
+                            f"than system Python {self.facts.python_version}"
+                        ),
+                        details={"suggestion": "Install the required Python version via pyenv"},
+                    )
+                )
 
         # Warn if no venv module
-        if (
-            resolution.environment_type == EnvironmentType.VENV
-            and not self.facts.has_venv
-        ):
-            findings.append(RuleFinding(
-                rule_id="resolution.venv-unavailable",
-                severity=FindingSeverity.ERROR,
-                message="venv module is not available; cannot create virtual environment",
-            ))
+        if resolution.environment_type == EnvironmentType.VENV and not self.facts.has_venv:
+            findings.append(
+                RuleFinding(
+                    rule_id="resolution.venv-unavailable",
+                    severity=FindingSeverity.ERROR,
+                    message="venv module is not available; cannot create virtual environment",
+                )
+            )
 
         return findings
 
@@ -535,9 +558,7 @@ class ResolutionManager:
             package_manager=PackageManager(data.get("package_manager", "pip")),
             environment_type=EnvironmentType(data.get("environment_type", "venv")),
             environment_path=Path(data.get("environment_path", ".")),
-            accelerator_target=AcceleratorTarget(
-                data.get("accelerator_target", "cpu")
-            ),
+            accelerator_target=AcceleratorTarget(data.get("accelerator_target", "cpu")),
             created_at=data.get("created_at", ""),
             findings=[
                 RuleFinding(
@@ -576,7 +597,7 @@ class ResolutionManager:
         # Remove specifiers
         for prefix in (">=", "<=", "==", "!=", "~=", ">", "<", "^"):
             if cleaned.startswith(prefix):
-                cleaned = cleaned[len(prefix):].strip()
+                cleaned = cleaned[len(prefix) :].strip()
 
         parts = cleaned.replace(" ", "").split(".")
         if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
@@ -587,6 +608,7 @@ class ResolutionManager:
     def _parse_version_tuple(version_str: str) -> tuple[int, ...] | None:
         """Parse a version string into a tuple of ints."""
         import re as _re
+
         cleaned = version_str.strip()
         match = _re.match(r"(\d+)\.(\d+)", cleaned)
         if match:
@@ -604,6 +626,7 @@ class ResolutionManager:
             A filesystem-safe string.
         """
         import re as _re
+
         safe = _re.sub(r"[^a-zA-Z0-9._-]", "_", name)
         safe = safe.strip("._-")
         return safe or "project"
@@ -625,7 +648,4 @@ class ResolutionManager:
             A shell command string.
         """
         mgr = "mamba" if env_type == EnvironmentType.MAMBA else "conda"
-        return (
-            f"{mgr} create --prefix {env_path} "
-            f"python={py_ver} --yes"
-        )
+        return f"{mgr} create --prefix {env_path} python={py_ver} --yes"

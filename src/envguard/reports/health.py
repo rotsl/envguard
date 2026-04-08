@@ -20,6 +20,7 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import HealthReport, HealthStatus
 except ImportError:
@@ -42,9 +43,8 @@ except ImportError:
         missing_packages: list[str] = field(default_factory=list)
         outdated_packages: list[str] = field(default_factory=list)
         checks: dict[str, tuple[bool, str]] = field(default_factory=dict)
-        timestamp: str = field(
-            default_factory=lambda: datetime.now(timezone.utc).isoformat()
-        )
+        timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 
 logger = get_logger(__name__)
 
@@ -111,7 +111,9 @@ class HealthReporter:
             python_ok, python_version = self._check_python()
         checks["python_ok"] = (
             python_ok,
-            f"Python {python_version} functional" if python_ok else "Python interpreter not functional",
+            f"Python {python_version} functional"
+            if python_ok
+            else "Python interpreter not functional",
         )
 
         # --- pip ---
@@ -138,7 +140,9 @@ class HealthReporter:
             broken_packages = self._detect_broken_packages()
         checks["no_broken_packages"] = (
             len(broken_packages) == 0,
-            f"{len(broken_packages)} broken package(s)" if broken_packages else "No broken packages",
+            f"{len(broken_packages)} broken package(s)"
+            if broken_packages
+            else "No broken packages",
         )
 
         # --- Ownership violations ---
@@ -147,7 +151,9 @@ class HealthReporter:
             ownership_violations = self._detect_ownership_violations()
         checks["no_ownership_violations"] = (
             len(ownership_violations) == 0,
-            f"{len(ownership_violations)} ownership violation(s)" if ownership_violations else "No ownership violations",
+            f"{len(ownership_violations)} ownership violation(s)"
+            if ownership_violations
+            else "No ownership violations",
         )
 
         # --- Dependency check (if intent provided) ---
@@ -158,7 +164,9 @@ class HealthReporter:
             dependencies_ok = len(missing_packages) == 0
         checks["dependencies_ok"] = (
             dependencies_ok,
-            "All dependencies present" if dependencies_ok else f"{len(missing_packages)} missing package(s)",
+            "All dependencies present"
+            if dependencies_ok
+            else f"{len(missing_packages)} missing package(s)",
         )
 
         # --- Outdated packages ---
@@ -168,7 +176,10 @@ class HealthReporter:
 
         # --- Determine overall status ---
         all_passed = all(result for result, _ in checks.values())
-        any_critical_failed = not checks.get("environment_exists", (True, ""))[0] or not checks.get("python_ok", (True, ""))[0]
+        any_critical_failed = (
+            not checks.get("environment_exists", (True, ""))[0]
+            or not checks.get("python_ok", (True, ""))[0]
+        )
 
         if all_passed:
             status = HealthStatus.HEALTHY
@@ -314,6 +325,7 @@ class HealthReporter:
             )
             if result.returncode == 0:
                 import json
+
                 packages = json.loads(result.stdout.strip())
                 return len(packages)
         except (OSError, subprocess.TimeoutExpired, ValueError) as exc:
@@ -378,6 +390,7 @@ class HealthReporter:
 
         try:
             import pwd
+
             current_uid = os.getuid()
             current_user = pwd.getpwuid(current_uid).pw_name
         except (ImportError, KeyError):
@@ -451,7 +464,15 @@ class HealthReporter:
         # Normalize package names: "package>=1.0" → "package"
         normalized: set[str] = set()
         for dep in required:
-            name = dep.split(">=")[0].split("==")[0].split("<=")[0].split("~=")[0].split("!=")[0].split("[")[0].strip()
+            name = (
+                dep.split(">=")[0]
+                .split("==")[0]
+                .split("<=")[0]
+                .split("~=")[0]
+                .split("!=")[0]
+                .split("[")[0]
+                .strip()
+            )
             if name:
                 normalized.add(name.lower())
 
@@ -466,6 +487,7 @@ class HealthReporter:
             if pip_bin.is_file():
                 try:
                     import json as _json
+
                     result = subprocess.run(
                         [str(pip_bin), "list", "--format=json", "--disable-pip-version-check"],
                         capture_output=True,
@@ -506,8 +528,15 @@ class HealthReporter:
         outdated: list[str] = []
         try:
             import json as _json
+
             result = subprocess.run(
-                [str(pip_bin), "list", "--outdated", "--format=json", "--disable-pip-version-check"],
+                [
+                    str(pip_bin),
+                    "list",
+                    "--outdated",
+                    "--format=json",
+                    "--disable-pip-version-check",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=60,

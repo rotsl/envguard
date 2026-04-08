@@ -72,13 +72,17 @@ stderr_console = Console(stderr=True)
 
 # Reusable option definitions
 json_output_option = typer.Option(
-    False, "--json", "-j", help="Output results as JSON",
+    False,
+    "--json",
+    "-j",
+    help="Output results as JSON",
 )
 
 
 # ======================================================================
 # Helpers
 # ======================================================================
+
 
 def handle_error(error: Exception, json_output: bool = False) -> int:
     """Handle errors and return an appropriate exit code.
@@ -124,7 +128,9 @@ def _project_info_table(project_dir: Path) -> Table:
     ptype = detect_project_type(project_dir)
     table.add_row("Directory", str(project_dir))
     table.add_row("Type", ptype or "unknown")
-    table.add_row("envguard", "initialized" if get_envguard_dir(project_dir).exists() else "not initialized")
+    table.add_row(
+        "envguard", "initialized" if get_envguard_dir(project_dir).exists() else "not initialized"
+    )
 
     env_path = detect_active_env(project_dir)
     table.add_row("Active env", env_path or "none")
@@ -159,6 +165,7 @@ def _run_preflight(project_dir: Path) -> tuple[int, str]:
     """
     try:
         from envguard.preflight import PreflightEngine
+
         engine = PreflightEngine(project_dir=project_dir)
         result = engine.run()
         if result.success:
@@ -167,6 +174,7 @@ def _run_preflight(project_dir: Path) -> tuple[int, str]:
     except Exception as exc:
         # Fall back to lightweight Doctor checks if PreflightEngine is unavailable
         import logging
+
         logging.getLogger("envguard").warning(
             "PreflightEngine unavailable (%s) - falling back to Doctor checks", exc
         )
@@ -231,16 +239,24 @@ def _ensure_launchd_dir() -> Path:
 # Commands
 # ======================================================================
 
+
 @app.command()
 def init(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory to initialize",
+        Path.cwd(),
+        help="Project directory to initialize",
     ),
     python_version: str | None = typer.Option(
-        None, "--python", "-p", help="Python version to use (e.g. 3.12)",
+        None,
+        "--python",
+        "-p",
+        help="Python version to use (e.g. 3.12)",
     ),
     env_type: str | None = typer.Option(
-        None, "--env-type", "-e", help="Environment type (venv, conda)",
+        None,
+        "--env-type",
+        "-e",
+        help="Environment type (venv, conda)",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -261,7 +277,8 @@ def init(
             "project_dir": str(project_dir),
             "active_env": active_env,
             "python_version": python_version or platform_info["python_version"],
-            "env_type": env_type or ("conda" if active_env and "conda" in (active_env or "") else "venv"),
+            "env_type": env_type
+            or ("conda" if active_env and "conda" in (active_env or "") else "venv"),
             "platform": {
                 "system": platform_info["system"],
                 "machine": platform_info["machine"],
@@ -293,27 +310,25 @@ def init(
         gitignore = eg_dir / ".gitignore"
         if not gitignore.exists():
             gitignore.write_text(
-                "# envguard internal files\n"
-                "cache/\n"
-                "snapshots/\n"
-                "logs/\n"
-                "*.tmp\n",
+                "# envguard internal files\ncache/\nsnapshots/\nlogs/\n*.tmp\n",
                 encoding="utf-8",
             )
 
         if json_output:
             output_json({"ok": True, "project_dir": str(project_dir), "state": state})
         else:
-            console.print(Panel(
-                f"[bold green]envguard initialized[/bold green] in [cyan]{project_dir}[/cyan]\n\n"
-                f"  Project type : {ptype or 'auto-detected'}\n"
-                f"  Python       : {state['python_version']}\n"
-                f"  Env type     : {state['env_type']}\n"
-                f"  Active env   : {active_env or 'none'}\n"
-                f"  State file   : {state_file}",
-                title="envguard init",
-                border_style="green",
-            ))
+            console.print(
+                Panel(
+                    f"[bold green]envguard initialized[/bold green] in [cyan]{project_dir}[/cyan]\n\n"
+                    f"  Project type : {ptype or 'auto-detected'}\n"
+                    f"  Python       : {state['python_version']}\n"
+                    f"  Env type     : {state['env_type']}\n"
+                    f"  Active env   : {active_env or 'none'}\n"
+                    f"  State file   : {state_file}",
+                    title="envguard init",
+                    border_style="green",
+                )
+            )
 
     except Exception as exc:
         raise typer.Exit(handle_error(exc, json_output)) from exc
@@ -322,7 +337,8 @@ def init(
 @app.command()
 def doctor(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory",
+        Path.cwd(),
+        help="Project directory",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -371,7 +387,8 @@ def doctor(
 @app.command()
 def detect(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory",
+        Path.cwd(),
+        help="Project directory",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -411,10 +428,12 @@ def detect(
 @app.command()
 def preflight(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory",
+        Path.cwd(),
+        help="Project directory",
     ),
     command: list[str] | None = typer.Argument(
-        None, help="Command to run after preflight checks pass",
+        None,
+        help="Command to run after preflight checks pass",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -481,13 +500,19 @@ def preflight(
 @app.command()
 def run(
     command: list[str] = typer.Argument(
-        ..., help="Command to run (use -- to separate from envguard args)",
+        ...,
+        help="Command to run (use -- to separate from envguard args)",
     ),
     project_dir: Path = typer.Option(
-        Path.cwd(), "--dir", "-d", help="Project directory",
+        Path.cwd(),
+        "--dir",
+        "-d",
+        help="Project directory",
     ),
     no_preflight: bool = typer.Option(
-        False, "--no-preflight", help="Skip preflight checks",
+        False,
+        "--no-preflight",
+        help="Skip preflight checks",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -516,12 +541,14 @@ def run(
         env_path = detect_active_env(project_dir)
 
         if json_output:
-            output_json({
-                "ok": True,
-                "command": command,
-                "project_dir": str(project_dir),
-                "env_path": env_path,
-            })
+            output_json(
+                {
+                    "ok": True,
+                    "command": command,
+                    "project_dir": str(project_dir),
+                    "env_path": env_path,
+                }
+            )
 
         if not json_output:
             console.print(f"[cyan]Running:[/cyan] {' '.join(command)}\n")
@@ -539,7 +566,8 @@ def run(
 @app.command()
 def repair(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory",
+        Path.cwd(),
+        help="Project directory",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -612,11 +640,13 @@ def repair(
             if json_output:
                 output_json({"ok": True, "repairs": repairs})
             else:
-                console.print(Panel(
-                    "\n".join(f"  [green]✓[/green] {r}" for r in repairs),
-                    title=f"[bold green]Repairs applied ({len(repairs)})[/bold green]",
-                    border_style="green",
-                ))
+                console.print(
+                    Panel(
+                        "\n".join(f"  [green]✓[/green] {r}" for r in repairs),
+                        title=f"[bold green]Repairs applied ({len(repairs)})[/bold green]",
+                        border_style="green",
+                    )
+                )
 
     except typer.Exit:
         raise
@@ -627,10 +657,14 @@ def repair(
 @app.command()
 def freeze(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory",
+        Path.cwd(),
+        help="Project directory",
     ),
     output: Path | None = typer.Option(
-        None, "--output", "-o", help="Output file path",
+        None,
+        "--output",
+        "-o",
+        help="Output file path",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -675,14 +709,16 @@ def freeze(
         if json_output:
             output_json({"ok": True, "output": str(output), "packages": len(frozen)})
         else:
-            console.print(Panel(
-                f"  Output     : {output}\n"
-                f"  Packages   : {len(frozen)}\n"
-                f"  Python     : {snapshot['python_version']}\n"
-                f"  Environment: {env_path or 'system'}",
-                title="[bold green]Environment frozen[/bold green]",
-                border_style="green",
-            ))
+            console.print(
+                Panel(
+                    f"  Output     : {output}\n"
+                    f"  Packages   : {len(frozen)}\n"
+                    f"  Python     : {snapshot['python_version']}\n"
+                    f"  Environment: {env_path or 'system'}",
+                    title="[bold green]Environment frozen[/bold green]",
+                    border_style="green",
+                )
+            )
 
     except Exception as exc:
         raise typer.Exit(handle_error(exc, json_output)) from exc
@@ -691,7 +727,8 @@ def freeze(
 @app.command()
 def health(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory",
+        Path.cwd(),
+        help="Project directory",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -740,7 +777,9 @@ def health(
             console.print(table)
 
             if overall == "error":
-                console.print("\n[red]Environment has errors. Run [bold]envguard repair[/bold] to fix.[/red]")
+                console.print(
+                    "\n[red]Environment has errors. Run [bold]envguard repair[/bold] to fix.[/red]"
+                )
             elif overall == "warning":
                 console.print("\n[yellow]Environment has warnings.[/yellow]")
             else:
@@ -753,10 +792,15 @@ def health(
 @app.command()
 def update(
     dry_run: bool = typer.Option(
-        False, "--dry-run", help="Check for updates without installing",
+        False,
+        "--dry-run",
+        help="Check for updates without installing",
     ),
     channel: str | None = typer.Option(
-        None, "--channel", "-c", help="Update channel (stable, beta)",
+        None,
+        "--channel",
+        "-c",
+        help="Update channel (stable, beta)",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -772,6 +816,7 @@ def update(
 
         try:
             from envguard.update.updater import UpdateManager
+
             mgr = UpdateManager(config={"update_policy": channel})
             check = mgr.check_for_updates()
             update_available = check.update_available
@@ -782,8 +827,15 @@ def update(
             # Fall back to pip index if UpdateManager fails (e.g. no manifest server)
             update_error = str(exc)
             pip_result = run_command(
-                [sys.executable, "-m", "pip", "index", "versions", "envguard",
-                 "--disable-pip-version-check"],
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "index",
+                    "versions",
+                    "envguard",
+                    "--disable-pip-version-check",
+                ],
                 timeout=30,
             )
             if pip_result.returncode == 0 and pip_result.stdout:
@@ -800,27 +852,30 @@ def update(
                         break
 
         if json_output:
-            output_json({
-                "current": current,
-                "latest": latest,
-                "update_available": update_available,
-                "channel": channel,
-                "dry_run": dry_run,
-                "error": update_error,
-            })
+            output_json(
+                {
+                    "current": current,
+                    "latest": latest,
+                    "update_available": update_available,
+                    "channel": channel,
+                    "dry_run": dry_run,
+                    "error": update_error,
+                }
+            )
         else:
             if update_available:
-                console.print(Panel(
-                    f"  Current : {current}\n"
-                    f"  Latest  : {latest}\n"
-                    f"  Channel : {channel}",
-                    title="[bold yellow]Update available[/bold yellow]",
-                    border_style="yellow",
-                ))
+                console.print(
+                    Panel(
+                        f"  Current : {current}\n  Latest  : {latest}\n  Channel : {channel}",
+                        title="[bold yellow]Update available[/bold yellow]",
+                        border_style="yellow",
+                    )
+                )
                 if not dry_run:
                     console.print("\n[cyan]Installing update…[/cyan]")
                     try:
                         from envguard.update.updater import UpdateManager
+
                         mgr = UpdateManager(config={"update_policy": channel})
                         up_result = mgr.perform_update()
                         if up_result.get("success"):
@@ -854,7 +909,8 @@ def update(
 @app.command()
 def rollback(
     snapshot_id: str | None = typer.Argument(
-        None, help="Snapshot ID to rollback to",
+        None,
+        help="Snapshot ID to rollback to",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -883,10 +939,12 @@ def rollback(
                 return
 
             if json_output:
-                output_json({
-                    "ok": True,
-                    "available_snapshots": [s.stem for s in snapshots],
-                })
+                output_json(
+                    {
+                        "ok": True,
+                        "available_snapshots": [s.stem for s in snapshots],
+                    }
+                )
             else:
                 table = Table(title="Available Snapshots", border_style="cyan")
                 table.add_column("Snapshot ID", style="bold cyan")
@@ -918,6 +976,7 @@ def rollback(
         # Perform the actual rollback via RollbackManager
         try:
             from envguard.update.rollback import RollbackManager
+
             rb = RollbackManager()
             rb_result = rb.rollback(snapshot_id)
         except Exception as exc:
@@ -929,18 +988,21 @@ def rollback(
             raise typer.Exit(EXIT_GENERAL_ERROR) from exc
 
         if json_output:
-            output_json({
-                "ok": True,
-                "rolled_back_to": snapshot_id,
-                "result": rb_result,
-            })
+            output_json(
+                {
+                    "ok": True,
+                    "rolled_back_to": snapshot_id,
+                    "result": rb_result,
+                }
+            )
         else:
-            console.print(Panel(
-                f"  Snapshot : {snapshot_id}\n"
-                f"  File     : {snapshot_file}",
-                title="[bold green]Rollback complete[/bold green]",
-                border_style="green",
-            ))
+            console.print(
+                Panel(
+                    f"  Snapshot : {snapshot_id}\n  File     : {snapshot_file}",
+                    title="[bold green]Rollback complete[/bold green]",
+                    border_style="green",
+                )
+            )
 
     except typer.Exit:
         raise
@@ -951,7 +1013,10 @@ def rollback(
 @app.command()
 def install_shell_hooks(
     shell: str | None = typer.Option(
-        None, "--shell", "-s", help="Shell type (zsh, bash)",
+        None,
+        "--shell",
+        "-s",
+        help="Shell type (zsh, bash)",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -976,12 +1041,14 @@ def install_shell_hooks(
             output_json(result)
         else:
             if result["success"]:
-                console.print(Panel(
-                    f"  Shell  : {result.get('installed_for', shell)}\n"
-                    f"  RC file: {result.get('rc_file', 'none')}",
-                    title="[bold green]Shell hooks installed[/bold green]",
-                    border_style="green",
-                ))
+                console.print(
+                    Panel(
+                        f"  Shell  : {result.get('installed_for', shell)}\n"
+                        f"  RC file: {result.get('rc_file', 'none')}",
+                        title="[bold green]Shell hooks installed[/bold green]",
+                        border_style="green",
+                    )
+                )
             else:
                 console.print("[yellow]Failed to install hooks.[/yellow]")
 
@@ -992,7 +1059,10 @@ def install_shell_hooks(
 @app.command(name="uninstall-shell-hooks")
 def uninstall_shell_hooks(
     shell: str | None = typer.Option(
-        None, "--shell", "-s", help="Shell type (zsh, bash)",
+        None,
+        "--shell",
+        "-s",
+        help="Shell type (zsh, bash)",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -1017,11 +1087,13 @@ def uninstall_shell_hooks(
             output_json(result)
         else:
             if result["success"]:
-                console.print(Panel(
-                    f"  Shell  : {result.get('uninstalled_from', shell)}",
-                    title="[bold green]Shell hooks uninstalled[/bold green]",
-                    border_style="green",
-                ))
+                console.print(
+                    Panel(
+                        f"  Shell  : {result.get('uninstalled_from', shell)}",
+                        title="[bold green]Shell hooks uninstalled[/bold green]",
+                        border_style="green",
+                    )
+                )
             else:
                 console.print("[yellow]Failed to uninstall hooks.[/yellow]")
 
@@ -1044,24 +1116,29 @@ def install_launch_agent(
             return
 
         from envguard.launch.launch_agent import LaunchAgentManager
+
         la_manager = LaunchAgentManager()
         envguard_bin = shutil.which("envguard") or sys.executable + " -m envguard"
         result = la_manager.install(envguard_bin)
 
         if json_output:
-            output_json({
-                "ok": result["success"],
-                "plist_path": result["plist_path"],
-                "loaded": result["loaded"],
-            })
+            output_json(
+                {
+                    "ok": result["success"],
+                    "plist_path": result["plist_path"],
+                    "loaded": result["loaded"],
+                }
+            )
         else:
             if result["success"]:
-                console.print(Panel(
-                    f"  Plist : {result['plist_path']}\n"
-                    f"  Loaded: {'yes' if result['loaded'] else 'no (load manually with launchctl load -w)'}",
-                    title="[bold green]LaunchAgent installed[/bold green]",
-                    border_style="green",
-                ))
+                console.print(
+                    Panel(
+                        f"  Plist : {result['plist_path']}\n"
+                        f"  Loaded: {'yes' if result['loaded'] else 'no (load manually with launchctl load -w)'}",
+                        title="[bold green]LaunchAgent installed[/bold green]",
+                        border_style="green",
+                    )
+                )
             else:
                 console.print("[yellow]LaunchAgent plist written but failed to load.[/yellow]")
 
@@ -1102,11 +1179,13 @@ def uninstall_launch_agent(
         if json_output:
             output_json({"ok": True, "plist_path": str(plist_path)})
         else:
-            console.print(Panel(
-                f"  Removed: {plist_path}",
-                title="[bold green]LaunchAgent uninstalled[/bold green]",
-                border_style="green",
-            ))
+            console.print(
+                Panel(
+                    f"  Removed: {plist_path}",
+                    title="[bold green]LaunchAgent uninstalled[/bold green]",
+                    border_style="green",
+                )
+            )
 
     except Exception as exc:
         raise typer.Exit(handle_error(exc, json_output)) from exc
@@ -1115,7 +1194,8 @@ def uninstall_launch_agent(
 @app.command()
 def status(
     project_dir: Path = typer.Argument(
-        Path.cwd(), help="Project directory",
+        Path.cwd(),
+        help="Project directory",
     ),
     json_output: bool = json_output_option,
 ) -> None:
@@ -1147,13 +1227,15 @@ def status(
             output_json(status_data)
         else:
             # Header
-            console.print(Panel(
-                f"  envguard v{__version__}\n"
-                f"  Python   : {status_data['python_version']}\n"
-                f"  Platform : {status_data['platform']}",
-                title="[bold cyan]envguard[/bold cyan]",
-                border_style="cyan",
-            ))
+            console.print(
+                Panel(
+                    f"  envguard v{__version__}\n"
+                    f"  Python   : {status_data['python_version']}\n"
+                    f"  Platform : {status_data['platform']}",
+                    title="[bold cyan]envguard[/bold cyan]",
+                    border_style="cyan",
+                )
+            )
 
             # Project status
             table = Table(title="Project Status", border_style="green", show_header=False)
@@ -1189,9 +1271,11 @@ def status(
 # Internal utilities
 # ======================================================================
 
+
 def _iso_now() -> str:
     """Return the current UTC time in ISO 8601 format."""
     from datetime import datetime, timezone
+
     return datetime.now(timezone.utc).isoformat()
 
 
@@ -1199,6 +1283,7 @@ def _version_newer(latest: str, current: str) -> bool:
     """Return True if *latest* is a newer version than *current*."""
     try:
         from packaging.version import Version
+
         return Version(latest) > Version(current)
     except Exception:
         # Fallback: simple tuple comparison
@@ -1211,6 +1296,7 @@ def _version_newer(latest: str, current: str) -> bool:
                 except ValueError:
                     break
             return tuple(parts) if parts else (0,)
+
         return _parse(latest) > _parse(current)
 
 
@@ -1229,7 +1315,10 @@ def platform_info_summary() -> str:
 @app.command(name="shell-hook")
 def shell_hook(
     shell: str | None = typer.Option(
-        None, "--shell", "-s", help="Shell type (zsh, bash)",
+        None,
+        "--shell",
+        "-s",
+        help="Shell type (zsh, bash)",
     ),
 ) -> None:
     """Output shell integration code suitable for eval in RC files.
@@ -1246,6 +1335,7 @@ def _generate_launch_agent_plist() -> str:
     python_path = sys.executable
     # Determine the envguard module path
     import envguard as _eg
+
     module_path = str(Path(_eg.__file__).resolve().parent)
     return f"""\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1291,6 +1381,7 @@ def _generate_launch_agent_plist() -> str:
 # ======================================================================
 # Entry point
 # ======================================================================
+
 
 def main() -> None:
     """Entry point for `envguard` CLI invocation."""

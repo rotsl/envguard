@@ -26,18 +26,30 @@ class CudaNotSupportedOnMacosError(EnvguardError):
     """Raised when a project requires CUDA but is running on macOS."""
 
     def __init__(self, message: str = "") -> None:
-        msg = message or "CUDA is not supported as a runtime target on macOS. Use CPU or Apple MPS instead."
+        msg = (
+            message
+            or "CUDA is not supported as a runtime target on macOS. Use CPU or Apple MPS instead."
+        )
         super().__init__(msg)
 
 
 class IncompatibleWheelError(EnvguardError):
     """Raised when an incompatible wheel would be installed."""
 
-    def __init__(self, wheel_name: str = "", expected_arch: str = "", actual_arch: str = "", message: str = "") -> None:
+    def __init__(
+        self,
+        wheel_name: str = "",
+        expected_arch: str = "",
+        actual_arch: str = "",
+        message: str = "",
+    ) -> None:
         self.wheel_name = wheel_name
         self.expected_arch = expected_arch
         self.actual_arch = actual_arch
-        msg = message or f"Wheel '{wheel_name}' is incompatible: expected arch '{expected_arch}', got '{actual_arch}'."
+        msg = (
+            message
+            or f"Wheel '{wheel_name}' is incompatible: expected arch '{expected_arch}', got '{actual_arch}'."
+        )
         super().__init__(msg)
 
 

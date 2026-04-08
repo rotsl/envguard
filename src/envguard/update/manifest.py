@@ -21,11 +21,14 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import UpdateManifest
 except ImportError:
+
     class UpdateManifest:  # type: ignore[no-redef]
         """Fallback UpdateManifest when the models module is unavailable."""
+
         def __init__(self, **kwargs):
             self.version = kwargs.get("version", "0.0.0")
             self.download_url = kwargs.get("download_url", "")
@@ -58,6 +61,7 @@ except ImportError:
                 "size_bytes": self.size_bytes,
                 "package_url": self.package_url,
             }
+
 
 logger = get_logger(__name__)
 
@@ -292,6 +296,7 @@ class ManifestParser:
 # ------------------------------------------------------------------
 # Module-level helpers
 # ------------------------------------------------------------------
+
 
 def _parse_version_parts(version: str) -> list[int]:
     """Split a version string into a list of integer parts.

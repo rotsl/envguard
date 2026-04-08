@@ -16,8 +16,10 @@ from typing import Any
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class Architecture(str, Enum):
     """CPU architecture types."""
+
     X86_64 = "x86_64"
     ARM64 = "arm64"
     AARCH64 = "aarch64"
@@ -26,6 +28,7 @@ class Architecture(str, Enum):
 
 class ShellType(str, Enum):
     """Shell types on macOS/Linux."""
+
     BASH = "bash"
     ZSH = "zsh"
     FISH = "fish"
@@ -38,6 +41,7 @@ class ShellType(str, Enum):
 
 class EnvironmentType(str, Enum):
     """Types of Python environments."""
+
     VENV = "venv"
     CONDA = "conda"
     MAMBA = "mamba"
@@ -50,6 +54,7 @@ class EnvironmentType(str, Enum):
 
 class PackageManager(str, Enum):
     """Package manager identifiers."""
+
     PIP = "pip"
     CONDA = "conda"
     MAMBA = "mamba"
@@ -62,6 +67,7 @@ class PackageManager(str, Enum):
 
 class AcceleratorTarget(str, Enum):
     """Hardware acceleration targets."""
+
     CPU = "cpu"
     CUDA = "cuda"
     MPS = "mps"
@@ -72,6 +78,7 @@ class AcceleratorTarget(str, Enum):
 
 class FindingSeverity(str, Enum):
     """Severity levels for rule findings."""
+
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
@@ -80,6 +87,7 @@ class FindingSeverity(str, Enum):
 
 class HealthStatus(str, Enum):
     """Health check statuses."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -88,6 +96,7 @@ class HealthStatus(str, Enum):
 
 class RepairAction(str, Enum):
     """Types of repair actions that can be automatically applied."""
+
     RECOMMEND_ALTERNATIVE = "recommend_alternative"
     RECREATE_ENVIRONMENT = "recreate_environment"
     FIX_OWNERSHIP = "fix_ownership"
@@ -101,6 +110,7 @@ class RepairAction(str, Enum):
 
 class PermissionStatus(str, Enum):
     """Result of a permission check."""
+
     GRANTED = "granted"
     DENIED = "denied"
     UNKNOWN = "unknown"
@@ -110,6 +120,7 @@ class PermissionStatus(str, Enum):
 # ---------------------------------------------------------------------------
 # Data Classes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class HostFacts:
@@ -236,7 +247,7 @@ class ProjectIntent:
     has_previous_envguard_state: bool = False
     # --- Extended fields used by rules/repair engines ---
     requires_cuda: bool = False  # alias: same as has_cuda_requirements
-    requires_mps: bool = False   # alias: same as has_mps_requirements
+    requires_mps: bool = False  # alias: same as has_mps_requirements
     requires_network: bool = False
     requires_source_build: bool = False
     known_conflicts: list[str] = field(default_factory=list)
@@ -275,9 +286,7 @@ class ResolutionRecord:
     environment_type: EnvironmentType = EnvironmentType.VENV
     environment_path: Path = field(default_factory=Path)
     accelerator_target: AcceleratorTarget = AcceleratorTarget.CPU
-    created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     findings: list[RuleFinding] = field(default_factory=list)
     plan: dict[str, Any] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
@@ -313,9 +322,7 @@ class RuleFinding:
     remediation: str = ""
     auto_repairable: bool = False
     repair_action: RepairAction | None = None
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 @dataclass
@@ -351,9 +358,7 @@ class PreflightResult:
     environment_valid: bool = False
     smoke_test_results: list[tuple[str, bool, str]] = field(default_factory=list)
     summary: str = ""
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 @dataclass
@@ -380,6 +385,4 @@ class HealthReport:
     missing_packages: list[str] = field(default_factory=list)
     outdated_packages: list[str] = field(default_factory=list)
     checks: dict[str, tuple[bool, str]] = field(default_factory=dict)
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

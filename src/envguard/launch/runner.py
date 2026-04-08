@@ -18,12 +18,15 @@ except ImportError:
     def get_logger(name: str) -> logging.Logger:  # type: ignore[misc]
         return logging.getLogger(name)
 
+
 try:
     from envguard.models import HostFacts
 except ImportError:
+
     class HostFacts:  # type: ignore[no-redef]
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
+
 
 logger = get_logger(__name__)
 
@@ -312,6 +315,7 @@ class ManagedRunner:
         """
         try:
             from envguard.preflight import PreflightEngine
+
             engine = PreflightEngine(project_dir=self.project_dir, env_path=env_path)
             engine.run()
         except ImportError:

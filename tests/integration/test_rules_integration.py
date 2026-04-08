@@ -84,7 +84,9 @@ class TestRulesEngineScenarios:
         )
         engine = RulesEngine(facts=facts, intent=intent)
         findings = engine.evaluate()
-        mps_critical = [f for f in findings if f.severity == FindingSeverity.CRITICAL and "MPS" in f.message]
+        mps_critical = [
+            f for f in findings if f.severity == FindingSeverity.CRITICAL and "MPS" in f.message
+        ]
         assert len(mps_critical) == 0
 
     def test_rosetta_translated_python(self):
@@ -114,7 +116,11 @@ class TestRulesEngineScenarios:
         engine = RulesEngine(facts=facts, intent=intent)
         findings = engine.evaluate()
         # No network-critical findings expected
-        net_critical = [f for f in findings if "network" in f.rule_id.lower() and f.severity == FindingSeverity.CRITICAL]
+        net_critical = [
+            f
+            for f in findings
+            if "network" in f.rule_id.lower() and f.severity == FindingSeverity.CRITICAL
+        ]
         assert len(net_critical) == 0
 
     def test_conda_not_installed_but_required(self):
