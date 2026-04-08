@@ -9,6 +9,7 @@ import operator
 import platform
 import re
 import sys
+from typing import Any
 
 try:
     from envguard.logging import get_logger
@@ -39,7 +40,7 @@ def _version_tuple(s: str) -> tuple[int, ...]:
 
 
 # Supported comparison operators (PEP 508)
-_OPS: dict[str, type] = {
+_OPS: dict[str, Any] = {
     "==": operator.eq,
     "!=": operator.ne,
     ">=": operator.ge,
@@ -75,7 +76,7 @@ class MarkerEvaluator:
         # Try to use packaging.markers for full PEP 508 support
         self._use_packaging = False
         try:
-            from packaging import markers as _markers  # type: ignore[import-untyped]
+            from packaging import markers as _markers
 
             self._markers_module = _markers
             self._use_packaging = True
@@ -213,7 +214,7 @@ class MarkerEvaluator:
 
     def _evaluate_with_packaging(self, marker: str, env: dict) -> bool:
         """Evaluate using the ``packaging.markers`` module."""
-        from packaging.markers import Marker  # type: ignore[import-untyped]
+        from packaging.markers import Marker
 
         return Marker(marker).evaluate(env)
 

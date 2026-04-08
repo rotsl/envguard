@@ -120,6 +120,13 @@ mypy_path = "src"
 module = ["tomli", "tomli_w"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "envguard.resolver.inference",
+    "envguard.project.discovery",
+]
+warn_unused_ignores = false
+
 [tool.coverage.run]
 source = ["envguard"]
 branch = true

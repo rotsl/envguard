@@ -128,7 +128,7 @@ class Doctor:
                 "detail": {"exception": str(exc)},
             }
         self._results[check_name] = result
-        return result
+        return result  # type: ignore[no-any-return]
 
     def get_all_checks(self) -> list[str]:
         """Return a list of all available check names."""
@@ -622,7 +622,7 @@ class Doctor:
 
         # MPS not available - could be due to no PyTorch or no MPS support
         try:
-            import torch  # noqa: F401
+            import torch  # type: ignore[import-not-found]  # noqa: F401
 
             reason = "PyTorch MPS backend reports unavailable (may need macOS 12.3+)."
         except ImportError:

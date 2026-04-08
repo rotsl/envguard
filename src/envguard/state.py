@@ -438,7 +438,7 @@ class StateManager:
         if isinstance(obj, dict):
             return obj
         try:
-            return vars(obj)
+            return vars(obj)  # type: ignore[no-any-return]
         except TypeError:
             # Fallback: attribute-based extraction
             out: dict[str, Any] = {}

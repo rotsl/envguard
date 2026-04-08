@@ -147,7 +147,7 @@ class CondaBackend(BaseResolver):
         if not self.is_available():
             findings.append(
                 RuleFinding(
-                    rule="conda-validate",
+                    rule_id="conda-validate",
                     message="conda is not installed; cannot validate environment",
                     severity=FindingSeverity.WARNING,
                 )
@@ -162,7 +162,7 @@ class CondaBackend(BaseResolver):
                     if line.strip():
                         findings.append(
                             RuleFinding(
-                                rule="conda-verify",
+                                rule_id="conda-verify",
                                 message=line.strip(),
                                 severity=FindingSeverity.ERROR,
                             )
@@ -175,7 +175,7 @@ class CondaBackend(BaseResolver):
         for conflict in pip_conflicts:
             findings.append(
                 RuleFinding(
-                    rule="conda-pip-conflict",
+                    rule_id="conda-pip-conflict",
                     message=(
                         f"Package '{conflict['package']}' is pip-installed in conda env "
                         f"and may conflict with conda-managed dependencies"
@@ -254,7 +254,7 @@ class CondaBackend(BaseResolver):
             proc = self._run_conda(["info", "--json"], check=False)
             if proc.returncode == 0:
                 info = json.loads(proc.stdout)
-                return info.get("active_prefix_name")
+                return info.get("active_prefix_name")  # type: ignore[no-any-return]
         except (json.JSONDecodeError, OSError):
             pass
         return None
@@ -274,7 +274,7 @@ class CondaBackend(BaseResolver):
                 check=False,
             )
             if proc.returncode == 0:
-                return json.loads(proc.stdout)
+                return json.loads(proc.stdout)  # type: ignore[no-any-return]
         except (json.JSONDecodeError, OSError):
             pass
         return {}

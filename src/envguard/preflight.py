@@ -225,7 +225,7 @@ class PreflightEngine:
                     detector = mod.HostDetector()
                     facts = detector.detect()
                     self._normalise_facts(facts)
-                    return facts
+                    return facts  # type: ignore[no-any-return]
             except (ImportError, AttributeError):
                 continue
 
@@ -244,7 +244,7 @@ class PreflightEngine:
                     discovery = mod.ProjectDiscovery(self._project_dir, config=self._config)
                     intent = discovery.discover()
                     self._normalise_intent(intent)
-                    return intent
+                    return intent  # type: ignore[no-any-return]
             except (ImportError, AttributeError):
                 continue
 
@@ -286,7 +286,7 @@ class PreflightEngine:
                     manager = mod.ResolutionManager(facts, intent, findings)
                     resolution = manager.resolve()
                     self._normalise_resolution(resolution, intent)
-                    return resolution
+                    return resolution  # type: ignore[no-any-return]
             except (ImportError, AttributeError):
                 continue
 
@@ -776,7 +776,7 @@ class PreflightEngine:
         data: dict[str, Any] = {}
 
         try:
-            import tomllib
+            import tomllib  # type: ignore[import-not-found]
 
             with open(path, "rb") as fh:
                 data = tomllib.load(fh)

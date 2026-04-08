@@ -86,7 +86,7 @@ def load_json_file(path: Path, default: dict | None = None) -> dict | None:
     if not path.exists():
         return default
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8"))  # type: ignore[no-any-return]
     except (json.JSONDecodeError, OSError) as exc:
         logger.warning("Failed to read %s: %s", path, exc)
         return default
@@ -217,7 +217,7 @@ def check_network_connectivity(url: str = PYPI_URL, timeout: int = 5) -> bool:
 
         req = urllib.request.Request(url, method="HEAD")
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status < 500
+            return bool(resp.status < 500)
     except Exception:
         # Last resort: try a simple socket connection
         try:
@@ -254,7 +254,7 @@ def check_xcode_tools() -> dict[str, Any]:
 def check_mps_available() -> bool:
     """Check if Apple Metal Performance Shaders (MPS) is available for PyTorch."""
     try:
-        import torch
+        import torch  # type: ignore[import-not-found]
 
         return hasattr(torch.backends, "mps") and torch.backends.mps.is_available()
     except ImportError:

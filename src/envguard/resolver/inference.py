@@ -18,10 +18,10 @@ except ImportError:
     yaml = None  # type: ignore[assignment]
 
 try:
-    import tomllib
+    import tomllib  # type: ignore[import-not-found]
 except ImportError:
     try:
-        import tomli as tomllib  # type: ignore[import-untyped, no-redef]
+        import tomli as tomllib  # type: ignore[no-redef]
     except ImportError:
         tomllib = None  # type: ignore[assignment]
 
@@ -581,7 +581,7 @@ def _ast_value_to_python(node: ast.expr) -> Any:
         return [_ast_value_to_python(elt) for elt in node.elts]
 
     if isinstance(node, ast.Dict):
-        keys = [_ast_value_to_python(k) for k in node.keys]
+        keys = [_ast_value_to_python(k) for k in node.keys if k is not None]
         values = [_ast_value_to_python(v) for v in node.values]
         return dict(zip(keys, values, strict=False))
 
@@ -590,13 +590,13 @@ def _ast_value_to_python(node: ast.expr) -> Any:
 
     # ast.NameConstant (Python 3.7)
     if hasattr(ast, "NameConstant") and isinstance(node, ast.NameConstant):
-        return node.value  # type: ignore[attr-defined]
+        return node.value
 
     # ast.Num / ast.Str (Python 3.7)
     if hasattr(ast, "Num") and isinstance(node, ast.Num):
-        return node.n  # type: ignore[attr-defined]
+        return node.n
     if hasattr(ast, "Str") and isinstance(node, ast.Str):
-        return node.s  # type: ignore[attr-defined]
+        return node.s
 
     return None
 

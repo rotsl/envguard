@@ -20,15 +20,15 @@ except ImportError:
 
 
 try:
-    from envguard.models import UpdateCheckResult, UpdateManifest
+    from envguard.models import UpdateCheckResult, UpdateManifest  # type: ignore[attr-defined]
 except ImportError:
 
     class UpdateManifest:  # type: ignore[no-redef]
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs: object) -> None:
             self.__dict__.update(kwargs)
 
     class UpdateCheckResult:  # type: ignore[no-redef]
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs: object) -> None:
             self.__dict__.update(kwargs)
 
 
@@ -235,7 +235,7 @@ class UpdateManager:
         """
         try:
             check = self.check_for_updates()
-            return check.update_available
+            return check.update_available  # type: ignore[no-any-return]
         except Exception:
             return False
 
@@ -244,7 +244,7 @@ class UpdateManager:
 
         Policies: ``"stable"``, ``"beta"``, or ``"off"``.
         """
-        return self._config.get("update_policy", "stable")
+        return self._config.get("update_policy", "stable")  # type: ignore[no-any-return]
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -313,11 +313,11 @@ class UpdateManager:
 
             with tarfile.open(download_path, "r:gz") as tf:
                 # Guard against tar-slip
-                for member in tf.getmembers():
-                    member_path = (staging_dir / member.name).resolve()
-                    if not str(member_path).startswith(str(staging_dir.resolve())):
+                for tar_member in tf.getmembers():
+                    tar_member_path = (staging_dir / tar_member.name).resolve()
+                    if not str(tar_member_path).startswith(str(staging_dir.resolve())):
                         raise ValueError(
-                            f"Unsafe archive member rejected (tar-slip): {member.name}"
+                            f"Unsafe archive member rejected (tar-slip): {tar_member.name}"
                         )
                 tf.extractall(staging_dir)
         else:

@@ -24,7 +24,7 @@ try:
 except ImportError:
 
     class HostFacts:  # type: ignore[no-redef]
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs: object) -> None:
             self.__dict__.update(kwargs)
 
 
@@ -316,7 +316,7 @@ class ManagedRunner:
         try:
             from envguard.preflight import PreflightEngine
 
-            engine = PreflightEngine(project_dir=self.project_dir, env_path=env_path)
+            engine = PreflightEngine(project_dir=self.project_dir)
             engine.run()
         except ImportError:
             logger.debug("PreflightEngine not available; skipping preflight")

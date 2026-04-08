@@ -32,7 +32,7 @@ try:
     import tomllib  # type: ignore[import-not-found]
 except ModuleNotFoundError:
     try:
-        import tomli as tomllib  # type: ignore[import-not-found, no-redef]
+        import tomli as tomllib  # type: ignore[no-redef]
     except ModuleNotFoundError:
         tomllib = None  # type: ignore[assignment]
 
@@ -223,7 +223,7 @@ class ProjectDiscovery:
                                 if isinstance(elt, ast.Constant):
                                     values.append(str(elt.value))
                                 elif isinstance(elt, ast.Str):
-                                    values.append(elt.s)
+                                    values.append(str(elt.s))
                             info[kw.arg] = values
                         elif isinstance(kw.value, ast.Constant):
                             info[kw.arg] = str(kw.value)

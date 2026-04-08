@@ -53,11 +53,11 @@ def _to_dict(obj: Any) -> dict[str, Any]:
     returned with values converted.  Otherwise ``vars(obj)`` is used.
     """
     if is_dataclass(obj) and not isinstance(obj, type):
-        return _serialize(asdict(obj))
+        return _serialize(asdict(obj))  # type: ignore[no-any-return]
     if isinstance(obj, dict):
-        return _serialize(obj)
+        return _serialize(obj)  # type: ignore[no-any-return]
     try:
-        return _serialize(vars(obj))
+        return _serialize(vars(obj))  # type: ignore[no-any-return]
     except TypeError:
         # Fallback: try attribute-based extraction
         out: dict[str, Any] = {}
@@ -66,7 +66,7 @@ def _to_dict(obj: Any) -> dict[str, Any]:
                 continue
             with contextlib.suppress(Exception):
                 out[attr] = getattr(obj, attr)
-        return _serialize(out)
+        return _serialize(out)  # type: ignore[no-any-return]
 
 
 # Import Enum at module level after the helper functions

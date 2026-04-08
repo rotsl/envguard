@@ -23,13 +23,13 @@ except ImportError:
 
 
 try:
-    from envguard.models import UpdateManifest
+    from envguard.models import UpdateManifest  # type: ignore[attr-defined]
 except ImportError:
 
     class UpdateManifest:  # type: ignore[no-redef]
         """Fallback UpdateManifest when the models module is unavailable."""
 
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs: object) -> None:
             self.version = kwargs.get("version", "0.0.0")
             self.download_url = kwargs.get("download_url", "")
             self.checksum = kwargs.get("checksum", "")

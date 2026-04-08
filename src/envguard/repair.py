@@ -157,7 +157,7 @@ class RepairEngine:
         else:
             resolution.success = True
 
-        resolution.timestamp = datetime.now(timezone.utc).isoformat()
+        resolution.created_at = datetime.now(timezone.utc).isoformat()
         logger.info(
             "Repair complete - success=%s, actions=%s",
             resolution.success,
@@ -1235,7 +1235,7 @@ class RepairEngine:
         try:
             mod = __import__("envguard.preflight", fromlist=["PreflightEngine"])
             engine = mod.PreflightEngine(self._project_dir)
-            return engine._discover_project()
+            return engine._discover_project()  # type: ignore[no-any-return]
         except Exception:
             pass
 

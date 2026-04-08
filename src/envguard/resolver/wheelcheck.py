@@ -205,9 +205,9 @@ class WheelChecker:
         Tags are returned from most-specific to least-specific so that a
         caller can iterate and pick the first match.
         """
-        if arch == Architecture.ARM64 or arch == "arm64":
+        if arch == Architecture.ARM64:
             return sorted(_ARM64_PLATFORMS | _UNIVERSAL_PLATFORMS, reverse=True)
-        if arch == Architecture.X86_64 or arch == "x86_64":
+        if arch == Architecture.X86_64:
             return sorted(_X86_64_PLATFORMS | _UNIVERSAL_PLATFORMS | _I386_PLATFORMS, reverse=True)
 
         # Fallback: return all known macOS tags
@@ -274,4 +274,4 @@ class WheelChecker:
         parsed = self.parse_wheel_filename(wheel_filename)
         if not parsed:
             return False
-        return parsed["platform_tag"] == "any"
+        return parsed["platform_tag"] == "any"  # type: ignore[no-any-return]

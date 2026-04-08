@@ -175,7 +175,7 @@ class PipBackend(BaseResolver):
                     continue
                 findings.append(
                     RuleFinding(
-                        rule="pip-check",
+                        rule_id="pip-check",
                         message=line,
                         severity=FindingSeverity.ERROR,
                     )
@@ -183,7 +183,7 @@ class PipBackend(BaseResolver):
         except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
             findings.append(
                 RuleFinding(
-                    rule="pip-check",
+                    rule_id="pip-check",
                     message=f"Could not run pip check: {exc}",
                     severity=FindingSeverity.WARNING,
                 )

@@ -23,11 +23,11 @@ except ImportError:
 
 
 try:
-    from envguard.models import UpdateManifest
+    from envguard.models import UpdateManifest  # type: ignore[attr-defined]
 except ImportError:
 
     class UpdateManifest:  # type: ignore[no-redef]
-        def __init__(self, **kwargs):
+        def __init__(self, **kwargs: object) -> None:
             self.__dict__.update(kwargs)
 
 
