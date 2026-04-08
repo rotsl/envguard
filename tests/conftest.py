@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +15,6 @@ from envguard.models import (
     Architecture,
     EnvironmentType,
     FindingSeverity,
-    HealthStatus,
     HostFacts,
     PackageManager,
     PermissionStatus,
@@ -25,7 +23,6 @@ from envguard.models import (
     RuleFinding,
     ShellType,
 )
-
 
 # ---------------------------------------------------------------------------
 # HostFacts fixtures

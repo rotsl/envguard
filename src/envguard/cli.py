@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
 """
-envguard CLI – the main entry point for the environment orchestration framework.
+envguard CLI - the main entry point for the environment orchestration framework.
 
 Usage::
 
@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -28,19 +28,14 @@ from rich.table import Table
 from rich.text import Text
 
 from envguard import (
-    ENVGUARD_DIR_NAME,
-    EXIT_ALREADY_UP_TO_DATE,
-    EXIT_CONFIG_ERROR,
     EXIT_ENV_NOT_FOUND,
     EXIT_GENERAL_ERROR,
     EXIT_OK,
     EXIT_PERMISSION_DENIED,
     EXIT_PREFLIGHT_FAILED,
-    EXIT_UNSUPPORTED_PLATFORM,
-    EXIT_UPDATE_AVAILABLE,
     STATE_FILENAME,
-    SUPPORTED_SHELLS,
     SUPPORTED_ENV_TYPES,
+    SUPPORTED_SHELLS,
     __version__,
     check_xcode_tools,
     detect_active_env,
@@ -173,7 +168,7 @@ def _run_preflight(project_dir: Path) -> tuple[int, str]:
         # Fall back to lightweight Doctor checks if PreflightEngine is unavailable
         import logging
         logging.getLogger("envguard").warning(
-            "PreflightEngine unavailable (%s) – falling back to Doctor checks", exc
+            "PreflightEngine unavailable (%s) - falling back to Doctor checks", exc
         )
 
     doc = Doctor(project_dir=project_dir)
@@ -190,7 +185,7 @@ def _run_preflight(project_dir: Path) -> tuple[int, str]:
     return EXIT_OK, "All critical preflight checks passed."
 
 
-def _managed_run(command: list[str], project_dir: Path, env_path: Optional[str] = None) -> int:
+def _managed_run(command: list[str], project_dir: Path, env_path: str | None = None) -> int:
     """Execute *command* inside a managed environment.
 
     Returns the process exit code.
@@ -241,10 +236,10 @@ def init(
     project_dir: Path = typer.Argument(
         Path.cwd(), help="Project directory to initialize",
     ),
-    python_version: Optional[str] = typer.Option(
+    python_version: str | None = typer.Option(
         None, "--python", "-p", help="Python version to use (e.g. 3.12)",
     ),
-    env_type: Optional[str] = typer.Option(
+    env_type: str | None = typer.Option(
         None, "--env-type", "-e", help="Environment type (venv, conda)",
     ),
     json_output: bool = json_output_option,
@@ -321,7 +316,7 @@ def init(
             ))
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -370,7 +365,7 @@ def doctor(
     except typer.Exit:
         raise
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -410,7 +405,7 @@ def detect(
             console.print(_project_info_table(project_dir))
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -418,7 +413,7 @@ def preflight(
     project_dir: Path = typer.Argument(
         Path.cwd(), help="Project directory",
     ),
-    command: Optional[list[str]] = typer.Argument(
+    command: list[str] | None = typer.Argument(
         None, help="Command to run after preflight checks pass",
     ),
     json_output: bool = json_output_option,
@@ -480,7 +475,7 @@ def preflight(
     except typer.Exit:
         raise
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -538,7 +533,7 @@ def run(
     except typer.Exit:
         raise
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -608,7 +603,7 @@ def repair(
         repairs.append("Updated platform information")
 
         if not repairs:
-            msg = "No repairs needed – environment looks healthy."
+            msg = "No repairs needed - environment looks healthy."
             if json_output:
                 output_json({"ok": True, "repairs": [], "message": msg})
             else:
@@ -626,7 +621,7 @@ def repair(
     except typer.Exit:
         raise
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -634,7 +629,7 @@ def freeze(
     project_dir: Path = typer.Argument(
         Path.cwd(), help="Project directory",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None, "--output", "-o", help="Output file path",
     ),
     json_output: bool = json_output_option,
@@ -690,7 +685,7 @@ def freeze(
             ))
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -752,7 +747,7 @@ def health(
                 console.print("\n[green]Environment is healthy.[/green]")
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -760,7 +755,7 @@ def update(
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Check for updates without installing",
     ),
-    channel: Optional[str] = typer.Option(
+    channel: str | None = typer.Option(
         None, "--channel", "-c", help="Update channel (stable, beta)",
     ),
     json_output: bool = json_output_option,
@@ -773,7 +768,7 @@ def update(
         # Attempt update via UpdateManager (verified, rollback-capable)
         update_available = False
         latest = current
-        update_error: Optional[str] = None
+        update_error: str | None = None
 
         try:
             from envguard.update.updater import UpdateManager
@@ -842,9 +837,9 @@ def update(
                             console.print("[bold green]Updated successfully![/bold green]")
                         else:
                             console.print(f"[red]Update failed:[/red] {install_result.stderr}")
-                            raise typer.Exit(EXIT_GENERAL_ERROR)
+                            raise typer.Exit(EXIT_GENERAL_ERROR) from None
                 else:
-                    console.print("[dim]Dry run – no changes made.[/dim]")
+                    console.print("[dim]Dry run - no changes made.[/dim]")
             else:
                 if update_error:
                     console.print(f"[dim]Could not check remote manifest: {update_error}[/dim]")
@@ -853,12 +848,12 @@ def update(
     except typer.Exit:
         raise
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
 def rollback(
-    snapshot_id: Optional[str] = typer.Argument(
+    snapshot_id: str | None = typer.Argument(
         None, help="Snapshot ID to rollback to",
     ),
     json_output: bool = json_output_option,
@@ -931,7 +926,7 @@ def rollback(
                 output_json({"ok": False, "error": msg})
             else:
                 console.print(f"[red]{msg}[/red]")
-            raise typer.Exit(EXIT_GENERAL_ERROR)
+            raise typer.Exit(EXIT_GENERAL_ERROR) from exc
 
         if json_output:
             output_json({
@@ -950,12 +945,12 @@ def rollback(
     except typer.Exit:
         raise
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
 def install_shell_hooks(
-    shell: Optional[str] = typer.Option(
+    shell: str | None = typer.Option(
         None, "--shell", "-s", help="Shell type (zsh, bash)",
     ),
     json_output: bool = json_output_option,
@@ -991,12 +986,12 @@ def install_shell_hooks(
                 console.print("[yellow]Failed to install hooks.[/yellow]")
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command(name="uninstall-shell-hooks")
 def uninstall_shell_hooks(
-    shell: Optional[str] = typer.Option(
+    shell: str | None = typer.Option(
         None, "--shell", "-s", help="Shell type (zsh, bash)",
     ),
     json_output: bool = json_output_option,
@@ -1031,7 +1026,7 @@ def uninstall_shell_hooks(
                 console.print("[yellow]Failed to uninstall hooks.[/yellow]")
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -1068,10 +1063,10 @@ def install_launch_agent(
                     border_style="green",
                 ))
             else:
-                console.print(f"[yellow]LaunchAgent plist written but failed to load.[/yellow]")
+                console.print("[yellow]LaunchAgent plist written but failed to load.[/yellow]")
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command(name="uninstall-launch-agent")
@@ -1092,7 +1087,7 @@ def uninstall_launch_agent(
         plist_path = launch_agents_dir / "com.envguard.update.plist"
 
         if not plist_path.exists():
-            msg = "LaunchAgent not found – nothing to uninstall."
+            msg = "LaunchAgent not found - nothing to uninstall."
             if json_output:
                 output_json({"ok": True, "message": msg})
             else:
@@ -1114,7 +1109,7 @@ def uninstall_launch_agent(
             ))
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 @app.command()
@@ -1187,7 +1182,7 @@ def status(
                 console.print(f"\nEnvironment: [{color}]{env_health['message']}[/{color}]")
 
     except Exception as exc:
-        raise typer.Exit(handle_error(exc, json_output))
+        raise typer.Exit(handle_error(exc, json_output)) from exc
 
 
 # ======================================================================
@@ -1233,7 +1228,7 @@ def platform_info_summary() -> str:
 
 @app.command(name="shell-hook")
 def shell_hook(
-    shell: Optional[str] = typer.Option(
+    shell: str | None = typer.Option(
         None, "--shell", "-s", help="Shell type (zsh, bash)",
     ),
 ) -> None:
@@ -1242,8 +1237,8 @@ def shell_hook(
     Usage: eval "$(envguard shell-hook)"
     """
     shell_type = shell or get_shell_type()
-    # Output valid shell code – at minimum a no-op comment so eval succeeds
-    print(f"# envguard shell integration ({shell_type}) – v{__version__}")
+    # Output valid shell code - at minimum a no-op comment so eval succeeds
+    print(f"# envguard shell integration ({shell_type}) - v{__version__}")
 
 
 def _generate_launch_agent_plist() -> str:

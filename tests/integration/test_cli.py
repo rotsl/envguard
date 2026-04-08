@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
-import pytest
-
 # The envguard.cli module must be importable
 runner = CliRunner()
 

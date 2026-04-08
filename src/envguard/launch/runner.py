@@ -1,17 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Managed process runner – execute commands inside managed environments."""
+"""Managed process runner - execute commands inside managed environments."""
 
 from __future__ import annotations
 
 import os
-import shlex
-import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 try:
     from envguard.logging import get_logger
@@ -51,15 +48,15 @@ class ManagedRunner:
     def __init__(
         self,
         project_dir: Path,
-        env_path: Optional[Path] = None,
-        facts: Optional[HostFacts] = None,
+        env_path: Path | None = None,
+        facts: HostFacts | None = None,
     ) -> None:
         self.project_dir = project_dir.resolve()
         self._env_path = env_path
         self._facts = facts
 
     @property
-    def env_path(self) -> Optional[Path]:
+    def env_path(self) -> Path | None:
         return self._env_path
 
     def run(
@@ -67,7 +64,7 @@ class ManagedRunner:
         command: list[str],
         preflight: bool = True,
     ) -> int:
-        """Main entry point – run *command* in the managed environment.
+        """Main entry point - run *command* in the managed environment.
 
         Args:
             command: The command to execute as a list of strings.
@@ -101,7 +98,7 @@ class ManagedRunner:
     def run_script(
         self,
         script_path: Path,
-        args: Optional[list[str]] = None,
+        args: list[str] | None = None,
     ) -> int:
         """Execute a Python script in the managed environment.
 
@@ -125,7 +122,7 @@ class ManagedRunner:
     def run_python(
         self,
         module_or_script: str,
-        args: Optional[list[str]] = None,
+        args: list[str] | None = None,
     ) -> int:
         """Run a Python module or script using the managed environment's Python.
 
@@ -167,10 +164,7 @@ class ManagedRunner:
         returned (created if it does not exist).  Otherwise a ``.venv``
         directory inside ``project_dir`` is used.
         """
-        if self._env_path is not None:
-            env = self._env_path.resolve()
-        else:
-            env = self.project_dir / ".venv"
+        env = self._env_path.resolve() if self._env_path is not None else self.project_dir / ".venv"
 
         if not env.exists():
             logger.info("Creating virtual environment at %s", env)
@@ -249,7 +243,7 @@ class ManagedRunner:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _shell_safe_command(command: list[str]) -> Optional[list[str]]:
+    def _shell_safe_command(command: list[str]) -> list[str] | None:
         """Validate that no command argument contains shell injection characters.
 
         Returns the cleaned command list, or ``None`` if unsafe.
@@ -263,7 +257,7 @@ class ManagedRunner:
                     return None
         return command
 
-    def _validate_path(self, path: Path) -> Optional[Path]:
+    def _validate_path(self, path: Path) -> Path | None:
         """Resolve and validate a file path.
 
         The resolved path must:
@@ -287,7 +281,7 @@ class ManagedRunner:
         try:
             resolved.relative_to(self.project_dir)
         except ValueError:
-            # Not inside project_dir – allow only absolute, existing paths
+            # Not inside project_dir - allow only absolute, existing paths
             if not resolved.is_absolute():
                 logger.error("Relative path outside project directory: %s", resolved)
                 return None

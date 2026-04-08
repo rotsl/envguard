@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Resolution management – decide how to create an environment.
+"""Resolution management - decide how to create an environment.
 
 The :class:`ResolutionManager` takes host facts and project intent and
 produces a :class:`ResolutionRecord` that describes exactly which Python
@@ -12,11 +12,10 @@ use, along with a step-by-step creation plan.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from envguard.exceptions import EnvguardError, BrokenEnvironmentError
+from envguard.exceptions import BrokenEnvironmentError
 from envguard.logging import get_logger
 from envguard.models import (
     AcceleratorTarget,
@@ -411,14 +410,13 @@ class ResolutionManager:
             ))
 
         # Check network for initial dependency installation
-        if self.facts.network_available is False:
-            if not self.intent.has_wheelhouse:
-                findings.append(RuleFinding(
-                    rule_id="resolution.network-unavailable",
-                    severity=FindingSeverity.WARNING,
-                    message="Network is unavailable and no wheelhouse exists; "
-                            "offline installation may fail",
-                ))
+        if self.facts.network_available is False and not self.intent.has_wheelhouse:
+            findings.append(RuleFinding(
+                rule_id="resolution.network-unavailable",
+                severity=FindingSeverity.WARNING,
+                message="Network is unavailable and no wheelhouse exists; "
+                        "offline installation may fail",
+            ))
 
         # Check Python availability
         if resolution.python_version != "unknown":
@@ -510,7 +508,7 @@ class ResolutionManager:
         return res_file
 
     @classmethod
-    def from_saved(cls, project_dir: Path) -> Optional[ResolutionRecord]:
+    def from_saved(cls, project_dir: Path) -> ResolutionRecord | None:
         """Load a previously saved resolution.
 
         Args:
@@ -586,7 +584,7 @@ class ResolutionManager:
         return version_str.strip()
 
     @staticmethod
-    def _parse_version_tuple(version_str: str) -> Optional[tuple[int, ...]]:
+    def _parse_version_tuple(version_str: str) -> tuple[int, ...] | None:
         """Parse a version string into a tuple of ints."""
         import re as _re
         cleaned = version_str.strip()

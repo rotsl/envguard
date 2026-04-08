@@ -1,14 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Project inference engine – derive environment requirements from project files."""
+"""Project inference engine - derive environment requirements from project files."""
 
 from __future__ import annotations
 
 import ast
 import re
-from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 try:
     import yaml  # type: ignore[import-untyped]
@@ -321,7 +323,7 @@ class InferenceEngine:
         raw_deps = data.get("dependencies", [])
         conda_deps: list[str] = []
         pip_deps: list[str] = []
-        python_version: Optional[str] = None
+        python_version: str | None = None
 
         for dep in raw_deps:
             if isinstance(dep, dict) and "pip" in dep:
@@ -581,7 +583,7 @@ def _ast_value_to_python(node: ast.expr) -> Any:
     if isinstance(node, ast.Dict):
         keys = [_ast_value_to_python(k) for k in node.keys]
         values = [_ast_value_to_python(v) for v in node.values]
-        return dict(zip(keys, values))
+        return dict(zip(keys, values, strict=False))
 
     if isinstance(node, ast.Tuple):
         return tuple(_ast_value_to_python(elt) for elt in node.elts)

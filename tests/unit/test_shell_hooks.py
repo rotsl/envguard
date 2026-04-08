@@ -5,12 +5,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from typing import TYPE_CHECKING
 
 import pytest
 
 from envguard.launch.shell_hooks import ShellHookManager
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestShellHookManager:

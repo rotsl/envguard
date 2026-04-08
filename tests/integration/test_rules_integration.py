@@ -5,10 +5,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-import pytest
-
 from envguard.models import (
     AcceleratorTarget,
     Architecture,
@@ -17,7 +13,6 @@ from envguard.models import (
     HostFacts,
     PackageManager,
     ProjectIntent,
-    RepairAction,
 )
 from envguard.rules import RulesEngine
 
@@ -137,7 +132,7 @@ class TestRulesEngineScenarios:
         engine = RulesEngine(facts=facts, intent=intent)
         findings = engine.evaluate()
         # Should produce at least a warning about missing conda
-        missing = [f for f in findings if "conda" in f.message.lower() or "package" in f.rule_id.lower()]
+        [f for f in findings if "conda" in f.message.lower() or "package" in f.rule_id.lower()]
         # Findings may or may not exist depending on implementation
         assert isinstance(findings, list)
 

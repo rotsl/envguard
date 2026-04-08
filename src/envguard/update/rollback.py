@@ -1,17 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Rollback manager – snapshot and restore envguard installations."""
+"""Rollback manager - snapshot and restore envguard installations."""
 
 from __future__ import annotations
 
+import contextlib
 import json
-import os
 import shutil
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 from uuid import uuid4
 
 try:
@@ -34,7 +32,7 @@ class RollbackManager:
 
     STATE_DIR_NAME = ".envguard/rollback"
 
-    def __init__(self, state_dir: Optional[Path] = None) -> None:
+    def __init__(self, state_dir: Path | None = None) -> None:
         if state_dir is not None:
             self._state_dir = state_dir.resolve()
         else:
@@ -111,7 +109,7 @@ class RollbackManager:
 
         return snapshot_id
 
-    def rollback(self, snapshot_id: Optional[str] = None) -> dict:
+    def rollback(self, snapshot_id: str | None = None) -> dict:
         """Roll back to a previous snapshot.
 
         Args:
@@ -209,14 +207,14 @@ class RollbackManager:
 
         return True
 
-    def get_current_snapshot_id(self) -> Optional[str]:
+    def get_current_snapshot_id(self) -> str | None:
         """Return the snapshot ID of the most recent *successful* snapshot.
 
         Returns:
             A snapshot ID string, or ``None`` if no successful snapshots
             exist.
         """
-        best_id: Optional[str] = None
+        best_id: str | None = None
         best_time = ""
 
         for snap_id, meta in self._index.items():
@@ -304,10 +302,8 @@ class RollbackManager:
         except OSError as exc:
             logger.error("Restore failed: %s", exc)
             # Try to recover: re-create the install directory
-            try:
+            with contextlib.suppress(OSError):
                 install_dir.mkdir(parents=True, exist_ok=True)
-            except OSError:
-                pass
             return False
 
     def _validate_snapshot(self, snapshot_id: str) -> bool:
@@ -364,7 +360,7 @@ class RollbackManager:
             logger.error("Could not save snapshot index: %s", exc)
 
     @staticmethod
-    def _get_install_dir() -> Optional[Path]:
+    def _get_install_dir() -> Path | None:
         """Determine the filesystem path of the envguard package installation."""
         try:
             from importlib.util import find_spec
@@ -390,7 +386,7 @@ class RollbackManager:
             pass
         return "unknown"
 
-    def _get_latest_snapshot_id(self) -> Optional[str]:
+    def _get_latest_snapshot_id(self) -> str | None:
         """Return the ID of the most recent snapshot (regardless of success)."""
         if not self._index:
             return None

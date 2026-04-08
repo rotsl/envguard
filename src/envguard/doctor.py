@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
 """
-Doctor module – comprehensive diagnostic checks for the host system
+Doctor module - comprehensive diagnostic checks for the host system
 and project environment.
 
 Usage::
@@ -16,21 +16,18 @@ Usage::
 
 from __future__ import annotations
 
-import json
 import os
 import platform
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from envguard import (
     MACOS_VERSION_MIN,
     PYPI_URL,
-    SUPPORTED_ENV_TYPES,
     SUPPORTED_PLATFORMS,
-    ENVGUARD_DIR_NAME,
     check_mps_available,
     check_network_connectivity,
     check_xcode_tools,
@@ -144,7 +141,7 @@ class Doctor:
     def format_report(self, results: dict[str, Any]) -> str:
         """Format the results dict as a human-readable terminal string."""
         lines: list[str] = []
-        lines.append(f"envguard doctor – {results['project_dir']}")
+        lines.append(f"envguard doctor - {results['project_dir']}")
         lines.append("=" * 60)
 
         summary = results["summary"]
@@ -253,7 +250,7 @@ class Doctor:
         status = "error" if issues else "ok"
         message = f"{impl} {py_ver_str} at {py_path} ({arch})"
         if issues:
-            message += " – " + "; ".join(issues)
+            message += " - " + "; ".join(issues)
 
         return {
             "name": "python_installation",
@@ -287,7 +284,7 @@ class Doctor:
         message = f"Found: {', '.join(found) or 'none'}"
         if not found.get("pip") and not found.get("pip3"):
             status = "warning"
-            message += ". pip/pip3 not found – package installation may not work."
+            message += ". pip/pip3 not found - package installation may not work."
 
         return {
             "name": "package_managers",
@@ -527,7 +524,7 @@ class Doctor:
             message += f" (Python {env_py_ver})"
         if matches is False:
             status = "warning"
-            message += f" – WARNING: env Python ({env_py_ver}) differs from host ({current_ver})"
+            message += f" - WARNING: env Python ({env_py_ver}) differs from host ({current_ver})"
 
         return {
             "name": "environment_health",
@@ -593,7 +590,7 @@ class Doctor:
             return {
                 "name": "accelerator_support",
                 "status": "skip",
-                "message": "Not on Apple Silicon – MPS not applicable.",
+                "message": "Not on Apple Silicon - MPS not applicable.",
                 "detail": {
                     **details,
                     "cuda_supported": False,
@@ -616,12 +613,12 @@ class Doctor:
                 "detail": details,
             }
 
-        # MPS not available – could be due to no PyTorch or no MPS support
+        # MPS not available - could be due to no PyTorch or no MPS support
         try:
             import torch  # noqa: F401
             reason = "PyTorch MPS backend reports unavailable (may need macOS 12.3+)."
         except ImportError:
-            reason = "PyTorch not installed – cannot verify MPS. Install PyTorch for GPU acceleration."
+            reason = "PyTorch not installed - cannot verify MPS. Install PyTorch for GPU acceleration."
 
         return {
             "name": "accelerator_support",
@@ -655,9 +652,7 @@ class Doctor:
             # Show only first-level string/bool/int values
             parts: list[str] = []
             for k, v in detail.items():
-                if isinstance(v, (str, int, float, bool)):
-                    parts.append(f"{k}={v}")
-                elif isinstance(v, (list, tuple)) and len(v) <= 5:
+                if isinstance(v, (str, int, float, bool)) or (isinstance(v, (list, tuple)) and len(v) <= 5):
                     parts.append(f"{k}={v}")
                 elif isinstance(v, dict) and len(v) <= 3:
                     items = ", ".join(f"{dk}={dv}" for dk, dv in list(v.items())[:3])

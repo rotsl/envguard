@@ -6,11 +6,8 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![macOS](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-informational.svg)](#platform-support)
 [![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange.svg)]()
-[![GitHub](https://img.shields.io/badge/GitHub-rotsl%2Fenvguard-black.svg)](https://github.com/rotsl/envguard)
 
-> **Copyright &copy; 2026 Rohan R. Licensed under the Apache License, Version 2.0.**
->
-> **Repository:** [https://github.com/rotsl/envguard](https://github.com/rotsl/envguard)
+
 
 ---
 
@@ -857,25 +854,25 @@ envguard/
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                       CLI Layer                          │
-│              cli.py (Typer, 16 commands)                 │
+│                       CLI Layer                         │
+│              cli.py (Typer, 16 commands)                │
 └──────────────────────┬──────────────────────────────────┘
                        │
          ┌─────────────▼──────────────┐
-         │     Orchestration Layer     │
+         │     Orchestration Layer    │
          │  doctor.py · preflight.py  │
          └─────────────┬──────────────┘
                        │
    ┌───────────────────▼──────────────────────┐
-   │              Domain Layer                 │
-   │  detect · rules · repair · models         │
-   │  project/ · resolver/ · update/           │
+   │              Domain Layer                │
+   │  detect · rules · repair · models        │
+   │  project/ · resolver/ · update/          │
    └───────────────────┬──────────────────────┘
                        │
    ┌───────────────────▼──────────────────────┐
-   │            Platform Layer                 │
-   │     macos/ · security/ · launch/          │
-   └───────────────────────────────────────────┘
+   │            Platform Layer                │
+   │     macos/ · security/ · launch/         │
+   └──────────────────────────────────────────┘
 ```
 
 ### Error handling
@@ -1014,23 +1011,11 @@ Full details in [docs/limitations.md](docs/limitations.md). Summary:
 
 ## License
 
-```
 Copyright 2026 Rohan R
+[Licensed under the Apache License, Version 2.0](https://github.com/rotsl/envguard?tab=Apache-2.0-1-ov-file)
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
 
 ---
 
 *envguard is in active development (alpha). APIs and behaviour may change between releases.*
-*Repository: [https://github.com/rotsl/envguard](https://github.com/rotsl/envguard)*
+

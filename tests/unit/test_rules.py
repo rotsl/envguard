@@ -5,22 +5,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-import pytest
-
 from envguard.models import (
-    AcceleratorTarget,
     Architecture,
-    EnvironmentType,
     FindingSeverity,
     HostFacts,
     PackageManager,
     PermissionStatus,
     ProjectIntent,
-    RepairAction,
     RuleFinding,
-    ShellType,
 )
 from envguard.rules import RulesEngine
 

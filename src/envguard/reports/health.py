@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Health reporter – generate HealthReport for a project environment."""
+"""Health reporter - generate HealthReport for a project environment."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
     from envguard.logging import get_logger
@@ -35,7 +35,7 @@ except ImportError:
     @dataclass
     class HealthReport:  # type: ignore[no-redef]
         status: HealthStatus = HealthStatus.UNKNOWN
-        environment_path: Optional[Path] = None
+        environment_path: Path | None = None
         python_ok: bool = False
         pip_ok: bool = False
         dependencies_ok: bool = False
@@ -65,7 +65,7 @@ class HealthReporter:
     def __init__(
         self,
         project_dir: Path,
-        env_path: Optional[Path] = None,
+        env_path: Path | None = None,
     ) -> None:
         self.project_dir = Path(project_dir).resolve()
         self.env_path = Path(env_path) if env_path else self._detect_env_path()
@@ -84,10 +84,10 @@ class HealthReporter:
         Parameters
         ----------
         facts:
-            Optional :class:`~envguard.models.HostFacts` – used to check
+            Optional :class:`~envguard.models.HostFacts` - used to check
             Python version compatibility.
         intent:
-            Optional :class:`~envguard.models.ProjectIntent` – used to
+            Optional :class:`~envguard.models.ProjectIntent` - used to
             verify that declared dependencies are present.
 
         Returns
@@ -106,7 +106,7 @@ class HealthReporter:
 
         # --- Python interpreter ---
         python_ok = False
-        python_version: Optional[str] = None
+        python_version: str | None = None
         if env_exists:
             python_ok, python_version = self._check_python()
         checks["python_ok"] = (
@@ -158,7 +158,7 @@ class HealthReporter:
             dependencies_ok = len(missing_packages) == 0
         checks["dependencies_ok"] = (
             dependencies_ok,
-            f"All dependencies present" if dependencies_ok else f"{len(missing_packages)} missing package(s)",
+            "All dependencies present" if dependencies_ok else f"{len(missing_packages)} missing package(s)",
         )
 
         # --- Outdated packages ---
@@ -193,7 +193,7 @@ class HealthReporter:
     # Environment detection
     # ------------------------------------------------------------------
 
-    def _detect_env_path(self) -> Optional[Path]:
+    def _detect_env_path(self) -> Path | None:
         """Auto-detect the environment path from common locations."""
         # Check VIRTUAL_ENV first
         virtual_env = os.environ.get("VIRTUAL_ENV")
@@ -227,13 +227,13 @@ class HealthReporter:
             return False
         return self.env_path.is_dir()
 
-    def _check_python(self) -> tuple[bool, Optional[str]]:
+    def _check_python(self) -> tuple[bool, str | None]:
         """Check that the Python interpreter inside the environment works.
 
         Returns
         -------
         tuple[bool, Optional[str]]
-            ``(ok, version_string)`` – *version_string* is ``None`` when
+            ``(ok, version_string)`` - *version_string* is ``None`` when
             the check fails.
         """
         if self.env_path is None:
@@ -401,7 +401,7 @@ class HealthReporter:
 
         return violations
 
-    def _find_site_packages(self) -> Optional[Path]:
+    def _find_site_packages(self) -> Path | None:
         """Locate the ``site-packages`` directory inside the environment."""
         if self.env_path is None:
             return None

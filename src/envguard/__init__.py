@@ -5,6 +5,18 @@
 envguard - macOS-first Python environment orchestration framework.
 """
 
+from __future__ import annotations
+
+import json
+import logging
+import os
+import platform
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
 __version__ = "0.1.0"
 __author__ = "Rohan R."
 
@@ -46,17 +58,6 @@ MACOS_VERSION_MIN = (12, 0)  # Monterey
 # Utility helpers used by CLI and Doctor
 # ---------------------------------------------------------------------------
 
-import json
-import logging
-import os
-import platform
-import shutil
-import subprocess
-import sys
-from pathlib import Path
-from typing import Any, Optional
-
-
 logger = logging.getLogger("envguard")
 
 
@@ -80,7 +81,7 @@ def ensure_envguard_dir(project_dir: Path) -> Path:
     return eg_dir
 
 
-def load_json_file(path: Path, default: Optional[dict] = None) -> Optional[dict]:
+def load_json_file(path: Path, default: dict | None = None) -> dict | None:
     """Load a JSON file, returning *default* if the file doesn't exist."""
     if not path.exists():
         return default
@@ -99,7 +100,7 @@ def save_json_file(path: Path, data: dict) -> None:
     tmp.replace(path)
 
 
-def find_executable(name: str) -> Optional[str]:
+def find_executable(name: str) -> str | None:
     """Return the path of an executable on ``$PATH`` or *None*."""
     return shutil.which(name)
 
@@ -107,7 +108,7 @@ def find_executable(name: str) -> Optional[str]:
 def run_command(
     cmd: list[str],
     capture: bool = True,
-    timeout: Optional[int] = 30,
+    timeout: int | None = 30,
     check: bool = False,
 ) -> subprocess.CompletedProcess:
     """Run a subprocess command with sensible defaults."""
@@ -124,7 +125,7 @@ def is_macos() -> bool:
     return platform.system() == "Darwin"
 
 
-def get_macos_version() -> Optional[tuple[int, ...]]:
+def get_macos_version() -> tuple[int, ...] | None:
     """Return macOS version as tuple, e.g. (14, 2, 1), or None."""
     if not is_macos():
         return None
@@ -152,7 +153,7 @@ def get_platform_info() -> dict[str, Any]:
     return info
 
 
-def detect_project_type(project_dir: Path) -> Optional[str]:
+def detect_project_type(project_dir: Path) -> str | None:
     """Detect the project type based on presence of marker files."""
     markers = [
         ("pyproject.toml", "pyproject"),
@@ -170,15 +171,13 @@ def detect_project_type(project_dir: Path) -> Optional[str]:
     return None
 
 
-def detect_active_env(project_dir: Path) -> Optional[str]:
+def detect_active_env(project_dir: Path) -> str | None:
     """Detect if there's an active virtual environment in the project."""
     venv_markers = [".venv", "venv", "env"]
     for name in venv_markers:
         venv_path = project_dir / name
-        if venv_path.is_dir():
-            # Check for pyvenv.cfg marker
-            if (venv_path / "pyvenv.cfg").exists():
-                return str(venv_path)
+        if venv_path.is_dir() and (venv_path / "pyvenv.cfg").exists():
+            return str(venv_path)
     # Check VIRTUAL_ENV environment variable
     venv_env = os.environ.get("VIRTUAL_ENV")
     if venv_env:
@@ -194,7 +193,7 @@ def detect_active_env(project_dir: Path) -> Optional[str]:
     return None
 
 
-def pip_freeze(venv_path: Optional[str] = None) -> list[str]:
+def pip_freeze(venv_path: str | None = None) -> list[str]:
     """Return the output of ``pip freeze`` as a list of lines."""
     if venv_path:
         python_bin = str(Path(venv_path) / "bin" / "python")
@@ -213,8 +212,8 @@ def pip_freeze(venv_path: Optional[str] = None) -> list[str]:
 def check_network_connectivity(url: str = PYPI_URL, timeout: int = 5) -> bool:
     """Check basic network connectivity using a HEAD request (no deps)."""
     try:
-        import urllib.request
         import urllib.error
+        import urllib.request
         req = urllib.request.Request(url, method="HEAD")
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status < 500

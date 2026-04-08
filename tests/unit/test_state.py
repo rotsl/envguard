@@ -6,20 +6,20 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from envguard.models import (
-    AcceleratorTarget,
-    Architecture,
     EnvironmentType,
-    HostFacts,
     PackageManager,
     ProjectIntent,
     ResolutionRecord,
 )
 from envguard.state import StateManager
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestStateManager:
@@ -120,7 +120,7 @@ class TestStateManager:
     def test_save_and_load_launch_policy(self, state_mgr: StateManager, tmp_path: Path):
         state_mgr.ensure_project_dir(tmp_path)
         policy = {"auto_preflight": True, "managed_commands": ["python", "pytest"]}
-        path = state_mgr.save_launch_policy(tmp_path, policy)
+        state_mgr.save_launch_policy(tmp_path, policy)
         loaded = state_mgr.load_launch_policy(tmp_path)
         assert loaded is not None
         assert loaded["auto_preflight"] is True

@@ -1,20 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Update manager – check for, download, and apply envguard updates."""
+"""Update manager - check for, download, and apply envguard updates."""
 
 from __future__ import annotations
 
-import json
-import os
-import platform
 import shutil
-import sys
-import tempfile
 import urllib.request
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 try:
     from envguard.logging import get_logger
@@ -25,7 +19,7 @@ except ImportError:
         return logging.getLogger(name)
 
 try:
-    from envguard.models import UpdateManifest, UpdateCheckResult
+    from envguard.models import UpdateCheckResult, UpdateManifest
 except ImportError:
     class UpdateManifest:  # type: ignore[no-redef]
         def __init__(self, **kwargs):
@@ -37,8 +31,8 @@ except ImportError:
 
 try:
     from envguard.update.manifest import ManifestParser
-    from envguard.update.verifier import UpdateVerifier
     from envguard.update.rollback import RollbackManager
+    from envguard.update.verifier import UpdateVerifier
 except ImportError:
     ManifestParser = None  # type: ignore[assignment,misc]
     UpdateVerifier = None  # type: ignore[assignment,misc]
@@ -49,7 +43,7 @@ logger = get_logger(__name__)
 # URL for the release manifest
 DEFAULT_MANIFEST_URL = "https://releases.envguard.dev/manifest.json"
 
-# Current version – read from package metadata or fallback
+# Current version - read from package metadata or fallback
 _PACKAGE_VERSION = "0.1.0"
 
 
@@ -62,7 +56,7 @@ class UpdateManager:
 
     DEFAULT_MANIFEST_URL = DEFAULT_MANIFEST_URL
 
-    def __init__(self, config: Optional[dict] = None) -> None:
+    def __init__(self, config: dict | None = None) -> None:
         self._config = config or {}
         self._manifest_url = self._config.get(
             "manifest_url", self.DEFAULT_MANIFEST_URL
@@ -71,9 +65,9 @@ class UpdateManager:
         self._cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Lazy-loaded helpers
-        self._manifest_parser: Optional[ManifestParser] = None
-        self._verifier: Optional[UpdateVerifier] = None
-        self._rollback: Optional[RollbackManager] = None
+        self._manifest_parser: ManifestParser | None = None
+        self._verifier: UpdateVerifier | None = None
+        self._rollback: RollbackManager | None = None
 
     @property
     def manifest_parser(self) -> ManifestParser:
@@ -286,9 +280,8 @@ class UpdateManager:
             headers={"User-Agent": f"envguard/{self.current_version}"},
         )
 
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            with open(dest, "wb") as fh:
-                shutil.copyfileobj(resp, fh)
+        with urllib.request.urlopen(req, timeout=120) as resp, open(dest, "wb") as fh:
+            shutil.copyfileobj(resp, fh)
 
         logger.info("Downloaded update to %s", dest)
         return dest
@@ -361,7 +354,7 @@ class UpdateManager:
                 # Use the staging dir itself
                 src_envguard = staged_path
 
-            # Copy files – validate each destination stays within install_dir
+            # Copy files - validate each destination stays within install_dir
             install_dir_resolved = install_dir.resolve()
             for item in src_envguard.iterdir():
                 dest = (install_dir / item.name).resolve()

@@ -3,14 +3,14 @@
 
 """Update management: checking, downloading, verifying, and rollback."""
 
-from envguard.update.updater import UpdateManager
 from envguard.update.manifest import ManifestParser
-from envguard.update.verifier import UpdateVerifier
 from envguard.update.rollback import RollbackManager
+from envguard.update.updater import UpdateManager
+from envguard.update.verifier import UpdateVerifier
 
 __all__ = [
-    "UpdateManager",
     "ManifestParser",
-    "UpdateVerifier",
     "RollbackManager",
+    "UpdateManager",
+    "UpdateVerifier",
 ]

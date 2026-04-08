@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from envguard.exceptions import (
     ArchitectureError,
     BrokenEnvironmentError,
@@ -18,6 +16,7 @@ from envguard.exceptions import (
     IncompatibleWheelError,
     InstallationError,
     NetworkUnavailableError,
+    PackageManagerNotFoundError,
     PlatformNotSupportedError,
     PreflightError,
     RepairError,
@@ -25,7 +24,6 @@ from envguard.exceptions import (
     TrustError,
     VerificationError,
     XcodeError,
-    PackageManagerNotFoundError,
 )
 
 
@@ -185,23 +183,23 @@ class TestOtherExceptions:
 
     def test_subprocess_timeout(self):
         err = SubprocessTimeoutError("pip timed out")
-        assert "pip timed out" == str(err)
+        assert str(err) == "pip timed out"
 
     def test_trust_error(self):
         err = TrustError("domain not trusted")
-        assert "domain not trusted" == str(err)
+        assert str(err) == "domain not trusted"
 
     def test_installation_error(self):
         err = InstallationError("install failed")
-        assert "install failed" == str(err)
+        assert str(err) == "install failed"
 
     def test_hash_algorithm_error(self):
         err = HashAlgorithmError("md5 not supported")
-        assert "md5 not supported" == str(err)
+        assert str(err) == "md5 not supported"
 
     def test_xcode_error(self):
         err = XcodeError("clt missing")
-        assert "clt missing" == str(err)
+        assert str(err) == "clt missing"
 
     def test_environment_creation_error(self):
         err = EnvironmentCreationError(env_path="/path", reason="no space")

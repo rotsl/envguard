@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 try:
     from envguard.logging import get_logger
@@ -111,7 +110,7 @@ class WheelChecker:
         - ``wheel_name`` (str)
         - ``platform_tag`` (str)
         - ``expected_arch`` (str)
-        - ``reason`` (str) – human-readable explanation when incompatible
+        - ``reason`` (str) - human-readable explanation when incompatible
         """
         parsed = self.parse_wheel_filename(wheel_filename)
 
@@ -144,7 +143,7 @@ class WheelChecker:
         elif expected_arch == Architecture.X86_64 or expected_arch == "x86_64":
             compatible_set = _X86_64_PLATFORMS | _UNIVERSAL_PLATFORMS | _I386_PLATFORMS
         else:
-            # Unknown arch – accept anything non-platform-specific
+            # Unknown arch - accept anything non-platform-specific
             compatible_set = _ARM64_PLATFORMS | _X86_64_PLATFORMS | _UNIVERSAL_PLATFORMS
 
         # The platform tag in the filename may contain multiple tags
@@ -174,11 +173,11 @@ class WheelChecker:
             "reason": reason,
         }
 
-    def parse_wheel_filename(self, filename: str) -> Optional[dict]:
+    def parse_wheel_filename(self, filename: str) -> dict | None:
         """Extract components from a wheel filename.
 
         Returns a dict with keys ``dist``, ``version``, ``build``,
-        ``python_tag``, ``abi_tag``, ``platform_tag`` – or ``None`` if the
+        ``python_tag``, ``abi_tag``, ``platform_tag`` - or ``None`` if the
         filename does not match PEP 427.
         """
         match = _WHEEL_RE.match(filename)
@@ -218,7 +217,7 @@ class WheelChecker:
         self,
         wheel_filename: str,
         arch: Architecture,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Return a human-readable reason for incompatibility, or ``None`` if compatible."""
         parsed = self.parse_wheel_filename(wheel_filename)
         if not parsed:

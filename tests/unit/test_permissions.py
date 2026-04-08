@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -58,7 +57,7 @@ class TestPermissionChecker:
         assert isinstance(result, bool)
 
     def test_check_network_access_unreachable(self, checker: PermissionChecker):
-        result, status = checker.check_network_access("this-domain-does-not-exist-12345.invalid", timeout=2)
+        result, _status = checker.check_network_access("this-domain-does-not-exist-12345.invalid", timeout=2)
         # Should handle gracefully
         assert isinstance(result, bool)
 

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Intent analysis – bridge between project discovery and host facts.
+"""Intent analysis - bridge between project discovery and host facts.
 
 The :class:`IntentAnalyzer` takes a :class:`ProjectIntent` (produced by
 project discovery) together with :class:`HostFacts` (produced by host
@@ -12,10 +12,7 @@ accelerator targets, and remediation hints.
 from __future__ import annotations
 
 import re
-import sys
-from typing import Optional
 
-from envguard.exceptions import EnvguardError
 from envguard.logging import get_logger
 from envguard.models import (
     AcceleratorTarget,
@@ -190,7 +187,7 @@ class IntentAnalyzer:
                 markers = self._extract_markers(dep)
                 if markers:
                     if "sys_platform == 'win32'" in markers:
-                        # Windows-only dep – check if it's the only one
+                        # Windows-only dep - check if it's the only one
                         pass
                     if "platform_system == 'Windows'" in markers:
                         pass
@@ -198,7 +195,7 @@ class IntentAnalyzer:
         return True
 
     @staticmethod
-    def _extract_markers(dep_string: str) -> Optional[str]:
+    def _extract_markers(dep_string: str) -> str | None:
         """Extract PEP 508 environment markers from a dependency string.
 
         Args:
@@ -278,7 +275,7 @@ class IntentAnalyzer:
         return unsupported
 
     @staticmethod
-    def _parse_version_tuple(version_str: str) -> Optional[tuple[int, ...]]:
+    def _parse_version_tuple(version_str: str) -> tuple[int, ...] | None:
         """Parse a version string like '3.11.7' into a comparable tuple.
 
         Handles common specifier prefixes like '>=', '==', '~=',
@@ -333,7 +330,7 @@ class IntentAnalyzer:
                 return EnvironmentType.MAMBA
             if self.facts.has_conda:
                 return EnvironmentType.CONDA
-            # Fall through – conda file present but tool not installed
+            # Fall through - conda file present but tool not installed
 
         if "Pipfile" in str(self.intent.project_dir):
             return EnvironmentType.PIPENV
@@ -341,7 +338,7 @@ class IntentAnalyzer:
         # Default: venv (universally available)
         return EnvironmentType.VENV
 
-    def recommend_python_version(self) -> Optional[str]:
+    def recommend_python_version(self) -> str | None:
         """Recommend a Python version based on project requirements.
 
         Returns:
@@ -356,16 +353,16 @@ class IntentAnalyzer:
             avail_tuple = self._parse_version_tuple(available)
 
             if req_tuple and avail_tuple and req_tuple <= avail_tuple:
-                # Use available version – it satisfies the requirement
+                # Use available version - it satisfies the requirement
                 return available
 
             if req_tuple and avail_tuple and req_tuple > avail_tuple:
-                # Need a newer version – return the requirement as-is
+                # Need a newer version - return the requirement as-is
                 return required
 
             return required
 
-        # No explicit requirement – recommend based on project deps
+        # No explicit requirement - recommend based on project deps
         dep_str = " ".join(self.intent.dependencies).lower()
         if any(pkg in dep_str for pkg in ("torch", "tensorflow", "jax")):
             return "3.11"

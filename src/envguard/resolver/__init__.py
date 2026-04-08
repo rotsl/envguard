@@ -4,17 +4,17 @@
 """Environment resolution backends and dependency management tools."""
 
 from envguard.resolver.base import BaseResolver
-from envguard.resolver.pip_backend import PipBackend
 from envguard.resolver.conda_backend import CondaBackend
-from envguard.resolver.wheelcheck import WheelChecker
-from envguard.resolver.markers import MarkerEvaluator
 from envguard.resolver.inference import InferenceEngine
+from envguard.resolver.markers import MarkerEvaluator
+from envguard.resolver.pip_backend import PipBackend
+from envguard.resolver.wheelcheck import WheelChecker
 
 __all__ = [
     "BaseResolver",
-    "PipBackend",
     "CondaBackend",
-    "WheelChecker",
-    "MarkerEvaluator",
     "InferenceEngine",
+    "MarkerEvaluator",
+    "PipBackend",
+    "WheelChecker",
 ]

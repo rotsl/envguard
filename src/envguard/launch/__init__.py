@@ -3,12 +3,12 @@
 
 """Launch management: runners, shell hooks, and launch agent integration."""
 
+from envguard.launch.launch_agent import LaunchAgentManager
 from envguard.launch.runner import ManagedRunner
 from envguard.launch.shell_hooks import ShellHookManager
-from envguard.launch.launch_agent import LaunchAgentManager
 
 __all__ = [
+    "LaunchAgentManager",
     "ManagedRunner",
     "ShellHookManager",
-    "LaunchAgentManager",
 ]

@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 
 from envguard.exceptions import VerificationError
-from envguard.security.trust import TrustManager
 from envguard.security.signatures import SignatureVerifier
+from envguard.security.trust import TrustManager
 
 
 class TestTrustManager:
@@ -108,7 +108,7 @@ class TestSignatureVerifier:
         assert result == expected
 
     def test_compute_file_hash_missing_file(self, verifier: SignatureVerifier):
-        with pytest.raises(Exception):
+        with pytest.raises((FileNotFoundError, OSError, ValueError)):
             verifier.compute_file_hash(Path("/nonexistent/file.bin"))
 
     def test_verify_hash_correct(self, verifier: SignatureVerifier, tmp_path: Path):

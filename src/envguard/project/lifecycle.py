@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Project lifecycle – initialise, manage, repair, and inspect environments.
+"""Project lifecycle - initialise, manage, repair, and inspect environments.
 
 The :class:`ProjectLifecycle` class ties together host detection, project
 discovery, intent analysis, and resolution management into a single
@@ -17,16 +17,14 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from envguard.detect import HostDetector, detect_host
+from envguard.detect import detect_host
 from envguard.exceptions import (
     BrokenEnvironmentError,
-    EnvguardError,
 )
 from envguard.logging import get_logger
 from envguard.models import (
-    AcceleratorTarget,
     EnvironmentType,
     FindingSeverity,
     HealthReport,
@@ -36,7 +34,7 @@ from envguard.models import (
     ProjectIntent,
     ResolutionRecord,
 )
-from envguard.project.discovery import ProjectDiscovery, discover_project
+from envguard.project.discovery import discover_project
 from envguard.project.intent import IntentAnalyzer
 from envguard.project.resolution import ResolutionManager
 
@@ -56,13 +54,13 @@ class ProjectLifecycle:
     def __init__(
         self,
         project_dir: Path,
-        facts: Optional[HostFacts] = None,
-        intent: Optional[ProjectIntent] = None,
+        facts: HostFacts | None = None,
+        intent: ProjectIntent | None = None,
     ) -> None:
         self.project_dir = Path(project_dir).resolve()
-        self._facts: Optional[HostFacts] = facts
-        self._intent: Optional[ProjectIntent] = intent
-        self._resolution: Optional[ResolutionRecord] = None
+        self._facts: HostFacts | None = facts
+        self._intent: ProjectIntent | None = intent
+        self._resolution: ResolutionRecord | None = None
 
     # ------------------------------------------------------------------ #
     # Properties
@@ -83,7 +81,7 @@ class ProjectLifecycle:
         return self._intent
 
     @property
-    def resolution(self) -> Optional[ResolutionRecord]:
+    def resolution(self) -> ResolutionRecord | None:
         """The current resolution, if any."""
         if self._resolution is None:
             self._resolution = ResolutionManager.from_saved(self.project_dir)
@@ -304,7 +302,7 @@ class ProjectLifecycle:
     def run_command(
         self,
         command: list[str],
-        env_path: Optional[Path] = None,
+        env_path: Path | None = None,
     ) -> int:
         """Execute a command inside the managed environment.
 
@@ -393,7 +391,7 @@ class ProjectLifecycle:
             shutil.rmtree(old_record.environment_path, ignore_errors=True)
 
         # Re-initialise
-        result = self.initialize()
+        self.initialize()
         record = self._resolution
         if record is None:
             raise BrokenEnvironmentError(
@@ -801,7 +799,7 @@ class ProjectLifecycle:
         # Check if it already exists
         if env_path.is_dir():
             logger.info(
-                "Environment already exists at %s – skipping creation",
+                "Environment already exists at %s - skipping creation",
                 env_path,
             )
             return True
@@ -880,7 +878,7 @@ class ProjectLifecycle:
             return command.split()
 
     @staticmethod
-    def _parse_ver(version_str: str) -> Optional[tuple[int, ...]]:
+    def _parse_ver(version_str: str) -> tuple[int, ...] | None:
         """Parse a version string into a comparable tuple.
 
         Args:

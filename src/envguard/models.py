@@ -10,8 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
-
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Enumerations
@@ -157,29 +156,29 @@ class HostFacts:
     shell: ShellType = ShellType.UNKNOWN
     shell_type: ShellType = ShellType.UNKNOWN  # alias for compatibility
     has_xcode_cli: bool = False
-    network_available: Optional[bool] = None
+    network_available: bool | None = None
     # --- Extended fields used by rules/repair engines ---
     mps_available: bool = False
-    conda_path: Optional[str] = None
-    pip_path: Optional[str] = None
-    total_ram_gb: Optional[float] = None
+    conda_path: str | None = None
+    pip_path: str | None = None
+    total_ram_gb: float | None = None
     is_macos: bool = False  # convenience alias: True when os_name == "Darwin"
     username: str = "unknown"
     home_dir: Path = field(default_factory=Path)
-    project_dir: Optional[Path] = None
+    project_dir: Path | None = None
     project_dir_writable: bool = False
     home_writable: bool = False
     permissions_notes: list[str] = field(default_factory=list)
     extra: dict[str, Any] = field(default_factory=dict)
 
     # Permission check results (populated by PermissionChecker)
-    write_permissions: dict[str, "PermissionStatus"] = field(default_factory=dict)
-    execute_permissions: dict[str, "PermissionStatus"] = field(default_factory=dict)
-    read_permissions: dict[str, "PermissionStatus"] = field(default_factory=dict)
-    launch_agent_write: "PermissionStatus" = PermissionStatus.UNKNOWN
-    subprocess_execution: "PermissionStatus" = PermissionStatus.UNKNOWN
-    network_access: "PermissionStatus" = PermissionStatus.UNKNOWN
-    shell_rc_write: "PermissionStatus" = PermissionStatus.UNKNOWN
+    write_permissions: dict[str, PermissionStatus] = field(default_factory=dict)
+    execute_permissions: dict[str, PermissionStatus] = field(default_factory=dict)
+    read_permissions: dict[str, PermissionStatus] = field(default_factory=dict)
+    launch_agent_write: PermissionStatus = PermissionStatus.UNKNOWN
+    subprocess_execution: PermissionStatus = PermissionStatus.UNKNOWN
+    network_access: PermissionStatus = PermissionStatus.UNKNOWN
+    shell_rc_write: PermissionStatus = PermissionStatus.UNKNOWN
 
 
 @dataclass
@@ -217,7 +216,7 @@ class ProjectIntent:
     project_dir: Path = field(default_factory=Path)
     environment_type: EnvironmentType = EnvironmentType.UNKNOWN
     package_managers: list[PackageManager] = field(default_factory=list)
-    python_version_required: Optional[str] = None
+    python_version_required: str | None = None
     dependencies: list[str] = field(default_factory=list)
     dev_dependencies: list[str] = field(default_factory=list)
     dependency_count: int = 0
@@ -225,13 +224,13 @@ class ProjectIntent:
     has_requirements_txt: bool = False
     has_conda_env_file: bool = False
     has_setup_py: bool = False
-    conda_env_path: Optional[Path] = None
+    conda_env_path: Path | None = None
     requirements_files: list[Path] = field(default_factory=list)
     build_system: str = "unknown"
     project_name: str = "unknown"
     project_version: str = "unknown"
     has_wheelhouse: bool = False
-    wheelhouse_path: Optional[Path] = None
+    wheelhouse_path: Path | None = None
     has_cuda_requirements: bool = False
     has_mps_requirements: bool = False
     has_previous_envguard_state: bool = False
@@ -313,7 +312,7 @@ class RuleFinding:
     # --- Extended fields used by rules/repair engines ---
     remediation: str = ""
     auto_repairable: bool = False
-    repair_action: Optional["RepairAction"] = None
+    repair_action: RepairAction | None = None
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -345,10 +344,10 @@ class PreflightResult:
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     # --- Extended fields used by preflight engine ---
-    host_facts: Optional[HostFacts] = None
-    project_intent: Optional[ProjectIntent] = None
+    host_facts: HostFacts | None = None
+    project_intent: ProjectIntent | None = None
     findings: list[RuleFinding] = field(default_factory=list)
-    resolution: Optional[ResolutionRecord] = None
+    resolution: ResolutionRecord | None = None
     environment_valid: bool = False
     smoke_test_results: list[tuple[str, bool, str]] = field(default_factory=list)
     summary: str = ""
@@ -374,7 +373,7 @@ class HealthReport:
     """
 
     status: HealthStatus = HealthStatus.UNKNOWN
-    environment_path: Optional[Path] = None
+    environment_path: Path | None = None
     python_ok: bool = False
     pip_ok: bool = False
     dependencies_ok: bool = False

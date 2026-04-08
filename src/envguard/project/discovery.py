@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Project discovery – scan a directory to infer project intent.
+"""Project discovery - scan a directory to infer project intent.
 
 The :class:`ProjectDiscovery` class walks a project directory looking for
 well-known configuration files (pyproject.toml, requirements.txt,
@@ -14,7 +14,7 @@ from __future__ import annotations
 import ast
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from envguard.exceptions import EnvguardError
 from envguard.logging import get_logger
@@ -49,7 +49,7 @@ class ProjectDiscovery:
     """
 
     #: File names checked during discovery, in priority order.
-    DISCOVERY_ORDER: list[str] = [
+    DISCOVERY_ORDER: list[str] = [  # noqa: RUF012
         "pyproject.toml",
         "requirements.txt",
         "requirements-dev.txt",
@@ -62,7 +62,7 @@ class ProjectDiscovery:
     ]
 
     #: Mapping of filename patterns to likely package-manager guesses.
-    MANAGER_INDICATORS: dict[str, list[PackageManager]] = {
+    MANAGER_INDICATORS: dict[str, list[PackageManager]] = {  # noqa: RUF012
         "pyproject.toml": [PackageManager.POETRY, PackageManager.PIP, PackageManager.UV],
         "requirements.txt": [PackageManager.PIP, PackageManager.UV],
         "requirements-dev.txt": [PackageManager.PIP],
@@ -87,7 +87,7 @@ class ProjectDiscovery:
     # ------------------------------------------------------------------ #
 
     def discover(self) -> ProjectIntent:
-        """Main entry – scan the project directory and build intent.
+        """Main entry - scan the project directory and build intent.
 
         Returns:
             A populated ProjectIntent describing the project.
@@ -148,7 +148,7 @@ class ProjectDiscovery:
 
         if tomllib is None:
             logger.warning(
-                "tomllib/tomli not available – cannot parse pyproject.toml"
+                "tomllib/tomli not available - cannot parse pyproject.toml"
             )
             return True, {}
 
@@ -178,7 +178,7 @@ class ProjectDiscovery:
         logger.debug("Requirements files found: %s", files if found else "none")
         return found, files
 
-    def detect_conda_env(self) -> tuple[bool, Optional[Path]]:
+    def detect_conda_env(self) -> tuple[bool, Path | None]:
         """Check for environment.yml or environment.yaml.
 
         Returns:
@@ -240,7 +240,7 @@ class ProjectDiscovery:
         logger.debug("setup.py AST analysis result: %s", info)
         return True, info
 
-    def detect_python_version_file(self) -> tuple[bool, Optional[str]]:
+    def detect_python_version_file(self) -> tuple[bool, str | None]:
         """Read .python-version if present.
 
         Returns:
@@ -260,7 +260,7 @@ class ProjectDiscovery:
             logger.warning("Could not read .python-version: %s", exc)
             return True, None
 
-    def detect_wheelhouse(self) -> tuple[bool, Optional[Path]]:
+    def detect_wheelhouse(self) -> tuple[bool, Path | None]:
         """Check for wheels/ or wheelhouse/ directories.
 
         Returns:
@@ -576,7 +576,7 @@ class ProjectDiscovery:
     def _parse_conda_env(path: Path, intent: ProjectIntent) -> None:
         """Best-effort YAML-like parse of a conda environment file.
 
-        Does **not** require PyYAML – uses simple line scanning.
+        Does **not** require PyYAML - uses simple line scanning.
         """
         try:
             content = path.read_text(encoding="utf-8")
@@ -606,11 +606,10 @@ class ProjectDiscovery:
                 in_deps = True
                 continue
 
-            if in_deps:
-                if stripped and not stripped[0].isspace() and ":" in stripped:
-                    in_deps = False
-                    in_pip = False
-                    continue
+            if in_deps and stripped and not stripped[0].isspace() and ":" in stripped:
+                in_deps = False
+                in_pip = False
+                continue
 
             if in_pip:
                 # pip sub-dependency: "    - package==1.0"

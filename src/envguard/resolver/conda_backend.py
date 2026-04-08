@@ -7,11 +7,9 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from envguard.resolver.base import BaseResolver
 
@@ -54,7 +52,7 @@ class CondaBackend(BaseResolver):
     def resolve(
         self,
         requirements: list[str],
-        constraints: Optional[list[str]] = None,
+        constraints: list[str] | None = None,
     ) -> list[str]:
         """Resolve dependencies via ``conda create --dry-run --json``."""
         if not self.is_available():
@@ -83,7 +81,7 @@ class CondaBackend(BaseResolver):
                     if name:
                         packages.append(f"{name}=={version}" if version else name)
                 return packages
-            # Conda returned an error – return raw requirements
+            # Conda returned an error - return raw requirements
             logger.debug("conda resolve failed (rc=%d): %s", proc.returncode, proc.stderr)
             return list(requirements)
         except (json.JSONDecodeError, OSError) as exc:
@@ -102,7 +100,7 @@ class CondaBackend(BaseResolver):
             logger.error("conda is not available; cannot install packages")
             return False
 
-        args = ["install", "--prefix", str(env_path), "--yes"] + packages
+        args = ["install", "--prefix", str(env_path), "--yes", *packages]
 
         try:
             proc = self._run_conda(args, check=False)
@@ -221,14 +219,14 @@ class CondaBackend(BaseResolver):
         """Execute a conda subcommand."""
         conda_exe = shutil.which("conda") or "conda"
         return subprocess.run(
-            [conda_exe] + args,
+            [conda_exe, *args],
             capture_output=True,
             text=True,
             check=check,
             timeout=300,
         )
 
-    def detect_conda_prefix(self) -> Optional[Path]:
+    def detect_conda_prefix(self) -> Path | None:
         """Detect the root conda installation prefix."""
         if not self.is_available():
             return None
@@ -248,7 +246,7 @@ class CondaBackend(BaseResolver):
                 return Path(val)
         return None
 
-    def detect_active_env(self) -> Optional[str]:
+    def detect_active_env(self) -> str | None:
         """Return the name of the currently active conda environment."""
         # CONDA_DEFAULT_ENV is set when a conda env is activated
         env_name = os.environ.get("CONDA_DEFAULT_ENV")
@@ -288,7 +286,7 @@ class CondaBackend(BaseResolver):
         self,
         env_name: str,
         python_version: str,
-        packages: Optional[list[str]] = None,
+        packages: list[str] | None = None,
     ) -> bool:
         """Create a new conda environment.
 
@@ -409,7 +407,7 @@ class CondaBackend(BaseResolver):
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _resolve_env_prefix(self, env_name: str) -> Optional[Path]:
+    def _resolve_env_prefix(self, env_name: str) -> Path | None:
         """Resolve an environment name to its filesystem prefix.
 
         If *env_name* looks like an absolute path, return it directly.

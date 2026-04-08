@@ -9,7 +9,6 @@ import operator
 import platform
 import re
 import sys
-from typing import Optional
 
 try:
     from envguard.logging import get_logger
@@ -21,8 +20,25 @@ except ImportError:
 
 logger = get_logger(__name__)
 
+
+def _looks_like_version(s: str) -> bool:
+    """Return True if *s* looks like a version string (e.g. '3.11.2')."""
+    return bool(s) and all(part.isdigit() for part in s.split(".") if part)
+
+
+def _version_tuple(s: str) -> tuple[int, ...]:
+    """Convert a version string like '3.11.2' to a comparable tuple."""
+    parts = []
+    for part in s.split("."):
+        try:
+            parts.append(int(part))
+        except ValueError:
+            break
+    return tuple(parts) if parts else (0,)
+
+
 # Supported comparison operators (PEP 508)
-_OPS: dict[str, "type"] = {
+_OPS: dict[str, type] = {
     "==": operator.eq,
     "!=": operator.ne,
     ">=": operator.ge,
@@ -64,7 +80,7 @@ class MarkerEvaluator:
         except ImportError:
             self._markers_module = None  # type: ignore[assignment]
 
-    def evaluate(self, marker: str, env: Optional[dict] = None) -> bool:
+    def evaluate(self, marker: str, env: dict | None = None) -> bool:
         """Evaluate a PEP 508 *marker* string.
 
         Args:
@@ -87,7 +103,7 @@ class MarkerEvaluator:
             try:
                 return self._evaluate_with_packaging(marker, env)
             except Exception as exc:
-                logger.debug("packaging.markers evaluation failed: %s – falling back", exc)
+                logger.debug("packaging.markers evaluation failed: %s - falling back", exc)
 
         # Fallback: our own implementation
         return self._evaluate_simple_marker(marker, env)
@@ -207,7 +223,7 @@ class MarkerEvaluator:
             return self._eval_single(tokens[0].strip(), env)
 
         # Simple left-to-right evaluation (no precedence for and/or for
-        # now – PEP 508 says ``and`` binds tighter than ``or``)
+        # now - PEP 508 says ``and`` binds tighter than ``or``)
         # Split into or-groups first
         or_groups: list[list[str]] = [[]]
         for token in tokens:
@@ -221,10 +237,7 @@ class MarkerEvaluator:
                 or_groups[-1].append(token.strip())
 
         # Evaluate each or-group: all tokens must be True (and-bonded)
-        for group in or_groups:
-            if all(self._eval_single(t, env) for t in group):
-                return True
-        return False
+        return any(all(self._eval_single(t, env) for t in group) for group in or_groups)
 
     def _eval_single(self, expr: str, env: dict) -> bool:
         """Evaluate a single marker expression."""
@@ -242,7 +255,7 @@ class MarkerEvaluator:
 
         op_func = _OPS.get(op)
         if op_func is None:
-            return True  # Unknown operator – don't block
+            return True  # Unknown operator - don't block
 
         try:
             return bool(op_func(str(left_val), str(right_val)))
@@ -333,6 +346,6 @@ def _compatible_release(version: str, spec: str) -> bool:
 
 
 def os_name() -> str:
-    """Return ``os.name`` – one of ``'posix'``, ``'nt'``, ``'java'``."""
+    """Return ``os.name`` - one of ``'posix'``, ``'nt'``, ``'java'``."""
     import os
     return os.name

@@ -6,17 +6,16 @@
 from __future__ import annotations
 
 import json
-import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from envguard.resolver.base import BaseResolver
 from envguard.resolver.wheelcheck import WheelChecker
 
 if TYPE_CHECKING:
-    from envguard.models import Architecture, RuleFinding, FindingSeverity
+    from envguard.models import Architecture, FindingSeverity, RuleFinding
 
 try:
     from packaging import tags as pkg_tags
@@ -38,9 +37,9 @@ except ImportError:
 
 try:
     from envguard.models import (
+        Architecture,
         FindingSeverity,
         RuleFinding,
-        Architecture,
     )
 except ImportError:
     # Fallback definitions for standalone use / testing
@@ -80,7 +79,7 @@ class PipBackend(BaseResolver):
     def resolve(
         self,
         requirements: list[str],
-        constraints: Optional[list[str]] = None,
+        constraints: list[str] | None = None,
     ) -> list[str]:
         """Resolve dependencies using ``pip install --dry-run``.
 
@@ -118,11 +117,11 @@ class PipBackend(BaseResolver):
             return True
 
         pip = self._get_pip_path(env_path)
-        args = ["install"] + packages
+        args = ["install", *packages]
 
         try:
             proc = subprocess.run(
-                [str(pip)] + args,
+                [str(pip), *args],
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -338,7 +337,7 @@ class PipBackend(BaseResolver):
     ) -> subprocess.CompletedProcess:
         """Run a pip subcommand against the environment's pip."""
         pip = self._get_pip_path(env_path)
-        cmd = [str(pip)] + args
+        cmd = [str(pip), *args]
         return subprocess.run(
             cmd,
             capture_output=True,

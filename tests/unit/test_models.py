@@ -6,25 +6,22 @@
 from __future__ import annotations
 
 import dataclasses
-from pathlib import Path
-
-import pytest
 
 from envguard.models import (
     AcceleratorTarget,
     Architecture,
     EnvironmentType,
     FindingSeverity,
+    HealthReport,
     HealthStatus,
     HostFacts,
     PackageManager,
     PermissionStatus,
+    PreflightResult,
     ProjectIntent,
     RepairAction,
-    RuleFinding,
     ResolutionRecord,
-    PreflightResult,
-    HealthReport,
+    RuleFinding,
     ShellType,
 )
 

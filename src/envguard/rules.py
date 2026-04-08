@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Rules engine – evaluates a set of preflight rules against host facts and project intent.
+"""Rules engine - evaluates a set of preflight rules against host facts and project intent.
 
 Each rule is a method that returns ``None`` (pass) or a :class:`RuleFinding` (issue).
 The :meth:`RulesEngine.evaluate` method runs **all** rules in sequence and returns the
@@ -10,32 +10,23 @@ complete list of findings.
 
 from __future__ import annotations
 
-import os
-import platform
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+from envguard.logging import get_logger
 from envguard.models import (
-    HostFacts,
-    ProjectIntent,
-    RuleFinding,
-    FindingSeverity,
-    RepairAction,
     AcceleratorTarget,
     Architecture,
     EnvironmentType,
+    FindingSeverity,
+    HostFacts,
+    ProjectIntent,
+    RepairAction,
+    RuleFinding,
 )
-from envguard.exceptions import (
-    CudaNotSupportedOnMacosError,
-    IncompatibleWheelError,
-    DependencyConflictError,
-    BrokenEnvironmentError,
-    PlatformNotSupportedError,
-)
-from envguard.logging import get_logger
 
 logger = get_logger("envguard.rules")
 
@@ -54,7 +45,7 @@ class RulesEngine:
     def __init__(self, facts: HostFacts, intent: ProjectIntent) -> None:
         self._facts = facts
         self._intent = intent
-        self._env_path: Optional[Path] = self._infer_env_path()
+        self._env_path: Path | None = self._infer_env_path()
         self._normalise()
 
     # ------------------------------------------------------------------
@@ -65,7 +56,7 @@ class RulesEngine:
         """Run **all** registered rules and return every finding.
 
         Rules are executed in order.  A failing rule does **not** short-circuit
-        the evaluation – every rule runs so the caller gets a complete picture.
+        the evaluation - every rule runs so the caller gets a complete picture.
         """
         findings: list[RuleFinding] = []
         rule_methods = [
@@ -99,23 +90,23 @@ class RulesEngine:
             if finding is not None:
                 findings.append(finding)
                 logger.info(
-                    "Finding: [%s] %s – %s", finding.severity.value, finding.rule_id, finding.message
+                    "Finding: [%s] %s - %s", finding.severity.value, finding.rule_id, finding.message
                 )
 
-        logger.info("Rules evaluation complete – %d finding(s)", len(findings))
+        logger.info("Rules evaluation complete - %d finding(s)", len(findings))
         return findings
 
     # ------------------------------------------------------------------
     # Individual rules
     # ------------------------------------------------------------------
 
-    def check_platform_compatibility(self) -> Optional[RuleFinding]:
+    def check_platform_compatibility(self) -> RuleFinding | None:
         """Verify that the host platform is macOS.
 
         envguard is macOS-first; other platforms receive a CRITICAL finding.
         """
         if self._is_macos():
-            logger.debug("Platform check passed – running on macOS %s", self._facts.os_version)
+            logger.debug("Platform check passed - running on macOS %s", self._facts.os_version)
             return None
 
         return self._finding(
@@ -130,7 +121,7 @@ class RulesEngine:
             details={"os_name": self._facts.os_name, "os_version": self._facts.os_version},
         )
 
-    def check_architecture_compatibility(self) -> Optional[RuleFinding]:
+    def check_architecture_compatibility(self) -> RuleFinding | None:
         """Verify that the host architecture matches project expectations.
 
         Some packages ship separate wheels for ``arm64`` and ``x86_64``.  If the
@@ -144,7 +135,7 @@ class RulesEngine:
         try:
             target = Architecture(expected_arch.lower())
         except ValueError:
-            logger.warning("Unknown architecture preference '%s' – skipping check.", expected_arch)
+            logger.warning("Unknown architecture preference '%s' - skipping check.", expected_arch)
             return None
 
         if host_arch == target:
@@ -166,16 +157,16 @@ class RulesEngine:
             details={"expected": target.value, "actual": host_arch.value},
         )
 
-    def check_python_version(self) -> Optional[RuleFinding]:
+    def check_python_version(self) -> RuleFinding | None:
         """Verify that the host Python version satisfies project requirements."""
         required = self._intent.python_version_required
         if required is None:
-            logger.debug("No Python version requirement specified – skipping check.")
+            logger.debug("No Python version requirement specified - skipping check.")
             return None
 
         req_parts = re.match(r"(\d+)\.(\d+)", required.strip())
         if req_parts is None:
-            logger.warning("Could not parse python_version_required='%s' – skipping.", required)
+            logger.warning("Could not parse python_version_required='%s' - skipping.", required)
             return None
 
         req_tuple = (int(req_parts.group(1)), int(req_parts.group(2)))
@@ -205,8 +196,8 @@ class RulesEngine:
             },
         )
 
-    def check_cuda_on_macos(self) -> Optional[RuleFinding]:
-        """CRITICAL – if the project requires CUDA and we are on macOS.
+    def check_cuda_on_macos(self) -> RuleFinding | None:
+        """CRITICAL - if the project requires CUDA and we are on macOS.
 
         Apple Silicon does not support NVIDIA CUDA.  This rule fires when the
         project intent explicitly requests ``cuda`` as an accelerator target or
@@ -239,7 +230,7 @@ class RulesEngine:
             details={"cuda_related_deps": cuda_deps},
         )
 
-    def check_mps_availability(self) -> Optional[RuleFinding]:
+    def check_mps_availability(self) -> RuleFinding | None:
         """Check whether MPS (Metal Performance Shaders) is available.
 
         MPS requires macOS 12.3 (Monterey) or later on Apple Silicon.
@@ -286,7 +277,7 @@ class RulesEngine:
             details={"os_version": self._facts.os_version},
         )
 
-    def check_rosetta_risk(self) -> Optional[RuleFinding]:
+    def check_rosetta_risk(self) -> RuleFinding | None:
         """Warn if running x86_64 Python under Rosetta 2 translation."""
         if not self._facts.is_rosetta:
             return None
@@ -310,7 +301,7 @@ class RulesEngine:
             },
         )
 
-    def check_wheel_compatibility(self) -> Optional[RuleFinding]:
+    def check_wheel_compatibility(self) -> RuleFinding | None:
         """Detect architecture-incompatible wheels in project dependencies.
 
         Scans dependencies for packages that are known to ship platform-specific
@@ -353,7 +344,7 @@ class RulesEngine:
             details={"packages": problematic, "host_arch": host_arch_str},
         )
 
-    def check_mixed_pip_conda(self) -> Optional[RuleFinding]:
+    def check_mixed_pip_conda(self) -> RuleFinding | None:
         """Detect broken mixed pip/conda ownership in an existing environment."""
         env_path = self._env_path
         if env_path is None or not env_path.exists():
@@ -416,7 +407,7 @@ class RulesEngine:
 
         return None
 
-    def check_source_build_prerequisites(self) -> Optional[RuleFinding]:
+    def check_source_build_prerequisites(self) -> RuleFinding | None:
         """Check if Xcode CLI tools are available when source builds are needed."""
         needs_build = self._intent.requires_source_build
         if not needs_build:
@@ -447,7 +438,7 @@ class RulesEngine:
             details={"requires_source_build": True},
         )
 
-    def check_network_for_operations(self) -> Optional[RuleFinding]:
+    def check_network_for_operations(self) -> RuleFinding | None:
         """Verify network availability when the project needs to download packages."""
         if not self._intent.requires_network and not self._intent.dependencies:
             return None
@@ -470,7 +461,7 @@ class RulesEngine:
             details={"requires_network": self._intent.requires_network},
         )
 
-    def check_environment_exists(self) -> Optional[RuleFinding]:
+    def check_environment_exists(self) -> RuleFinding | None:
         """Check if the project's virtual or conda environment already exists."""
         env_path = self._env_path
         if env_path is None:
@@ -507,7 +498,7 @@ class RulesEngine:
             details={"expected_path": str(env_path)},
         )
 
-    def check_dependency_conflicts(self) -> Optional[RuleFinding]:
+    def check_dependency_conflicts(self) -> RuleFinding | None:
         """Look for known dependency conflict patterns."""
         known_conflicts: list[tuple[str, str, str]] = [
             ("tensorflow", "torch", "TensorFlow and PyTorch can coexist but may cause library conflicts (e.g., protobuf version). Pin protobuf explicitly."),
@@ -555,7 +546,7 @@ class RulesEngine:
 
         return None
 
-    def check_stale_environment(self) -> Optional[RuleFinding]:
+    def check_stale_environment(self) -> RuleFinding | None:
         """Check for drift between the project intent and the actual environment."""
         env_path = self._env_path
         if env_path is None or not env_path.exists():
@@ -590,7 +581,7 @@ class RulesEngine:
         severity = FindingSeverity.ERROR if missing else FindingSeverity.INFO
         remediation = ""
         auto_repair = False
-        action: Optional[RepairAction] = None
+        action: RepairAction | None = None
 
         if missing:
             remediation = f"Install missing packages: pip install {' '.join(missing)}"
@@ -600,14 +591,14 @@ class RulesEngine:
         return self._finding(
             rule_id="STALE_ENVIRONMENT",
             severity=severity,
-            message=f"Environment drift detected – {'; '.join(parts)}.",
+            message=f"Environment drift detected - {'; '.join(parts)}.",
             remediation=remediation,
             auto_repairable=auto_repair,
             repair_action=action,
             details={"missing": missing, "extra": extra[:20]},
         )
 
-    def check_missing_package_manager(self) -> Optional[RuleFinding]:
+    def check_missing_package_manager(self) -> RuleFinding | None:
         """Verify that the required package manager is available on the host."""
         env_type = self._intent.environment_type
 
@@ -640,7 +631,7 @@ class RulesEngine:
 
         return None
 
-    def check_package_manager_health(self) -> Optional[RuleFinding]:
+    def check_package_manager_health(self) -> RuleFinding | None:
         """Verify that pip/conda are functional and not in a broken state."""
         env_type = self._intent.environment_type
         findings: list[RuleFinding] = []
@@ -688,8 +679,8 @@ class RulesEngine:
         *,
         remediation: str = "",
         auto_repairable: bool = False,
-        repair_action: Optional[RepairAction] = None,
-        details: Optional[dict[str, Any]] = None,
+        repair_action: RepairAction | None = None,
+        details: dict[str, Any] | None = None,
     ) -> RuleFinding:
         """Construct a :class:`RuleFinding` with the given parameters."""
         return RuleFinding(
@@ -703,7 +694,7 @@ class RulesEngine:
         )
 
     # ------------------------------------------------------------------
-    # Normalisation – bridge between our fields and the base model fields
+    # Normalisation - bridge between our fields and the base model fields
     # ------------------------------------------------------------------
 
     def _normalise(self) -> None:
@@ -771,7 +762,7 @@ class RulesEngine:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _infer_env_path(self) -> Optional[Path]:
+    def _infer_env_path(self) -> Path | None:
         """Infer the environment path from the project directory."""
         project_dir = self._intent.project_dir
         if project_dir is None:
@@ -793,7 +784,7 @@ class RulesEngine:
         return project_dir / ".venv"
 
     @staticmethod
-    def _find_env_python(env_path: Path) -> Optional[Path]:
+    def _find_env_python(env_path: Path) -> Path | None:
         """Locate the Python binary inside an environment."""
         for name in ("python3", "python"):
             candidate = env_path / "bin" / name
@@ -805,7 +796,7 @@ class RulesEngine:
         return None
 
     @staticmethod
-    def _find_site_packages(env_path: Path) -> Optional[Path]:
+    def _find_site_packages(env_path: Path) -> Path | None:
         """Locate the site-packages directory inside an environment."""
         bin_dir = env_path / "bin"
         if not bin_dir.exists():
@@ -836,7 +827,7 @@ class RulesEngine:
         """Check if a path is a conda environment."""
         return (env_path / "conda-meta").is_dir()
 
-    def _list_installed_packages(self, python_bin: Path) -> Optional[set[str]]:
+    def _list_installed_packages(self, python_bin: Path) -> set[str] | None:
         """List installed packages using the environment's Python."""
         try:
             result = subprocess.run(
@@ -854,7 +845,7 @@ class RulesEngine:
         return None
 
     @staticmethod
-    def _check_wheel_arch_compat(package_name: str, host_arch: str) -> Optional[bool]:
+    def _check_wheel_arch_compat(package_name: str, host_arch: str) -> bool | None:
         """Check PyPI for wheel compatibility with the host architecture."""
         try:
             result = subprocess.run(
@@ -880,7 +871,7 @@ class RulesEngine:
             try:
                 socket.create_connection((host, 443), timeout=3)
                 return True
-            except (socket.timeout, socket.error, OSError):
+            except (TimeoutError, OSError):
                 continue
         return False
 

@@ -8,12 +8,14 @@ from __future__ import annotations
 import os
 import socket
 import subprocess
-from pathlib import Path
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING
 
-from envguard.models import HostFacts, PermissionStatus, ShellType
-from envguard.macos.paths import MacPaths
 from envguard.logging import get_logger
+from envguard.macos.paths import MacPaths
+from envguard.models import HostFacts, PermissionStatus, ShellType
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -188,7 +190,7 @@ class PermissionChecker:
 
     def check_network_access(
         self, host: str = "pypi.org", timeout: int = 5
-    ) -> Tuple[bool, PermissionStatus]:
+    ) -> tuple[bool, PermissionStatus]:
         """Check whether the current user can reach *host* on port 443 (HTTPS).
 
         Args:
@@ -203,7 +205,7 @@ class PermissionChecker:
             sock = socket.create_connection((host, 443), timeout=timeout)
             sock.close()
             return True, PermissionStatus.GRANTED
-        except socket.timeout:
+        except TimeoutError:
             self._logger.warning("Network check timed out connecting to %s", host)
             return False, PermissionStatus.DENIED
         except OSError as exc:

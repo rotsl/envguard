@@ -6,10 +6,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from envguard.models import Architecture, RuleFinding
 
 
@@ -25,7 +26,7 @@ class BaseResolver(ABC):
     def resolve(
         self,
         requirements: list[str],
-        constraints: Optional[list[str]] = None,
+        constraints: list[str] | None = None,
     ) -> list[str]:
         """Resolve dependencies and return list of packages to install.
 
@@ -108,7 +109,7 @@ class BaseResolver(ABC):
     def check_compatibility(
         self,
         package: str,
-        arch: "Architecture",
+        arch: Architecture,
         platform: str,
     ) -> dict:
         """Check if a package or wheel is compatible with the given architecture / platform.

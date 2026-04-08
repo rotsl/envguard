@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import platform
-import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -77,23 +76,27 @@ class TestHostDetector:
         with pytest.raises(EnvguardError):
             detector.detect_shell()
 
-    @patch("envguard.detect.shutil.which")
-    def test_detect_xcode_cli(self, mock_which):
-        mock_which.return_value = "/usr/bin/xcode-select"
+    @patch("envguard.detect.subprocess.run")
+    @patch("envguard.detect.sys")
+    def test_detect_xcode_cli(self, mock_sys, mock_run):
+        mock_sys.platform = "darwin"
+        mock_run.return_value = MagicMock(returncode=0, stdout="/Library/Developer/CommandLineTools\n", stderr="")
         detector = HostDetector()
         assert detector.detect_xcode_cli() is True
 
     @patch("envguard.detect.subprocess.run")
-    def test_detect_xcode_cli_not_installed(self, mock_run):
+    @patch("envguard.detect.sys")
+    def test_detect_xcode_cli_not_installed(self, mock_sys, mock_run):
+        mock_sys.platform = "darwin"
         mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="")
         detector = HostDetector()
         assert detector.detect_xcode_cli() is False
 
-    @patch("envguard.detect.shutil.which")
-    @patch("subprocess.run")
-    def test_detect_xcode_cli_with_subprocess(self, mock_run, mock_which):
+    @patch("envguard.detect.subprocess.run")
+    @patch("envguard.detect.sys")
+    def test_detect_xcode_cli_with_subprocess(self, mock_sys, mock_run):
         """Test with xcode-select -p returning a path."""
-        mock_which.return_value = "/usr/bin/xcode-select"
+        mock_sys.platform = "darwin"
         mock_run.return_value = MagicMock(returncode=0, stdout="/Applications/Xcode.app\n", stderr="")
         detector = HostDetector()
         assert detector.detect_xcode_cli() is True

@@ -6,12 +6,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+from envguard.models import PackageManager
 from envguard.project.discovery import ProjectDiscovery
-from envguard.models import EnvironmentType, PackageManager, AcceleratorTarget
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _write_toml(path: Path, data: dict) -> None:

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import List
 
 from envguard.exceptions import HashAlgorithmError, VerificationError
 from envguard.logging import get_logger
@@ -21,7 +20,7 @@ class SignatureVerifier:
     Supports SHA-256, SHA-384, and SHA-512 via Python's :mod:`hashlib`.
     """
 
-    HASH_ALGORITHMS: List[str] = ["sha256", "sha384", "sha512"]
+    HASH_ALGORITHMS: list[str] = ["sha256", "sha384", "sha512"]  # noqa: RUF012
     DEFAULT_ALGORITHM: str = "sha256"
 
     # ------------------------------------------------------------------
@@ -146,11 +145,11 @@ class SignatureVerifier:
             computed = cls.compute_file_hash(file_path, algorithm=algo)
         except FileNotFoundError as exc:
             raise VerificationError(
-                f"Cannot verify hash: file not found – {exc}"
+                f"Cannot verify hash: file not found - {exc}"
             ) from exc
         except OSError as exc:
             raise VerificationError(
-                f"Cannot verify hash: read error – {exc}"
+                f"Cannot verify hash: read error - {exc}"
             ) from exc
 
         if computed != normalized_expected:

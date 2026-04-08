@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Update verification – checksums, signatures, platform compatibility."""
+"""Update verification - checksums, signatures, platform compatibility."""
 
 from __future__ import annotations
 
 import hashlib
 import platform
 import sys
-from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 try:
     from envguard.logging import get_logger
@@ -151,7 +153,7 @@ class UpdateVerifier:
             A dict with keys:
             - ``checksum_ok`` (bool)
             - ``signature_ok`` (bool)
-            - ``trusted`` (bool) – ``True`` when all checks pass
+            - ``trusted`` (bool) - ``True`` when all checks pass
         """
         results: dict = {
             "checksum_ok": False,
@@ -168,7 +170,7 @@ class UpdateVerifier:
                 file_path, checksum, algorithm
             )
         else:
-            logger.error("No checksum in manifest – refusing to install unverified update")
+            logger.error("No checksum in manifest - refusing to install unverified update")
             results["checksum_ok"] = False
 
         # Signature verification
@@ -176,7 +178,7 @@ class UpdateVerifier:
         if signature:
             results["signature_ok"] = self.verify_signature(file_path, signature)
         else:
-            logger.debug("No signature in manifest – skipping signature verification")
+            logger.debug("No signature in manifest - skipping signature verification")
             results["signature_ok"] = True  # Don't block if not provided
 
         # Overall trust determination
@@ -254,7 +256,7 @@ class UpdateVerifier:
         min_parts = tuple(int(p) for p in str(min_py).split(".")[:3])
         # Pad if necessary
         while len(min_parts) < 3:
-            min_parts = min_parts + (0,)
+            min_parts = (*min_parts, 0)
 
         if current >= min_parts:
             return True

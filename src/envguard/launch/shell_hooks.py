@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Shell hook management – automatic preflight suggestions on directory change."""
+"""Shell hook management - automatic preflight suggestions on directory change."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 try:
     from envguard.logging import get_logger
@@ -49,7 +48,7 @@ envguard_chpwd() {
                 return
             fi
         fi
-        echo "[envguard] Detected .envguard/ – run 'envguard preflight' to verify your environment"
+        echo "[envguard] Detected .envguard/ - run 'envguard preflight' to verify your environment"
         date +%s > "$_envguard_state" 2>/dev/null
     fi
 }
@@ -84,7 +83,7 @@ envguard_prompt_command() {
                     return
                 fi
             fi
-            echo "[envguard] Detected .envguard/ – run 'envguard preflight' to verify your environment"
+            echo "[envguard] Detected .envguard/ - run 'envguard preflight' to verify your environment"
             date +%s > "$_envguard_state" 2>/dev/null
         fi
     fi
@@ -109,7 +108,7 @@ class ShellHookManager:
     containing ``.envguard/`` and suggest running ``envguard preflight``.
     """
 
-    def __init__(self, user_home: Optional[Path] = None) -> None:
+    def __init__(self, user_home: Path | None = None) -> None:
         if user_home is not None:
             self.user_home = user_home.resolve()
         else:
@@ -135,7 +134,7 @@ class ShellHookManager:
             return ""
         return config["hook_content"]
 
-    def install_hooks(self, shell: Optional[str] = None) -> dict:
+    def install_hooks(self, shell: str | None = None) -> dict:
         """Install shell hooks for automatic preflight suggestions.
 
         Args:
@@ -191,7 +190,7 @@ class ShellHookManager:
             "success": success,
         }
 
-    def uninstall_hooks(self, shell: Optional[str] = None) -> dict:
+    def uninstall_hooks(self, shell: str | None = None) -> dict:
         """Remove envguard hooks from a shell RC file.
 
         Args:
@@ -258,7 +257,7 @@ class ShellHookManager:
 
         return _HOOK_START in content and _HOOK_END in content
 
-    def get_rc_file_path(self, shell: str) -> Optional[Path]:
+    def get_rc_file_path(self, shell: str) -> Path | None:
         """Return the path to the shell's RC file.
 
         Args:

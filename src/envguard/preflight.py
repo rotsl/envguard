@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Preflight engine – orchestrates the full preflight pipeline.
+"""Preflight engine - orchestrates the full preflight pipeline.
 
 Pipeline steps
 --------------
@@ -21,30 +21,22 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-import uuid
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+from envguard.logging import get_logger
 from envguard.models import (
-    HostFacts,
-    ProjectIntent,
-    RuleFinding,
-    FindingSeverity,
-    RepairAction,
-    ResolutionRecord,
     AcceleratorTarget,
     Architecture,
     EnvironmentType,
+    FindingSeverity,
+    HostFacts,
     PreflightResult,
+    ProjectIntent,
+    ResolutionRecord,
+    RuleFinding,
+    ShellType,
 )
-from envguard.exceptions import (
-    CudaNotSupportedOnMacosError,
-    IncompatibleWheelError,
-    DependencyConflictError,
-    BrokenEnvironmentError,
-    PlatformNotSupportedError,
-)
-from envguard.logging import get_logger
 from envguard.rules import RulesEngine
 
 logger = get_logger("envguard.preflight")
@@ -61,7 +53,7 @@ class PreflightEngine:
         Optional configuration overrides.  When *None*, defaults are used.
     """
 
-    def __init__(self, project_dir: Path, config: Optional[dict] = None) -> None:
+    def __init__(self, project_dir: Path, config: dict | None = None) -> None:
         self._project_dir = Path(project_dir)
         self._config = config or {}
         self._findings: list[RuleFinding] = []
@@ -72,7 +64,7 @@ class PreflightEngine:
     # Public API
     # ------------------------------------------------------------------
 
-    def run(self, command: Optional[list[str]] = None) -> PreflightResult:
+    def run(self, command: list[str] | None = None) -> PreflightResult:
         """Execute the full preflight pipeline and return a result.
 
         Parameters
@@ -152,7 +144,7 @@ class PreflightEngine:
 
         # -- Step 5: Check if we should fail fast --------------------------------
         if self._should_fail(self._findings):
-            logger.error("Critical findings detected – preflight FAILED.")
+            logger.error("Critical findings detected - preflight FAILED.")
             result.passed = False
             result.success = False
             result.summary = self._generate_summary(result)
@@ -204,7 +196,7 @@ class PreflightEngine:
         result.passed = env_valid and not self._should_fail(self._findings)
         result.success = result.passed
         result.summary = self._generate_summary(result)
-        logger.info("Preflight complete – success=%s", result.success)
+        logger.info("Preflight complete - success=%s", result.success)
         return result
 
     # ------------------------------------------------------------------
@@ -220,7 +212,7 @@ class PreflightEngine:
         # Try importing from sub-packages created by other tasks
         for module_path in ("envguard.macos.host", "envguard.host"):
             try:
-                parts = module_path.split(".")
+                module_path.split(".")
                 mod = __import__(module_path, fromlist=["HostDetector"])
                 if hasattr(mod, "HostDetector"):
                     detector = mod.HostDetector()
@@ -230,7 +222,7 @@ class PreflightEngine:
             except (ImportError, AttributeError):
                 continue
 
-        logger.debug("HostDetector not available – using HostFacts directly.")
+        logger.debug("HostDetector not available - using HostFacts directly.")
         facts = HostFacts()
         self._populate_facts(facts)
         self._normalise_facts(facts)
@@ -249,7 +241,7 @@ class PreflightEngine:
             except (ImportError, AttributeError):
                 continue
 
-        logger.debug("ProjectDiscovery not available – using built-in discovery.")
+        logger.debug("ProjectDiscovery not available - using built-in discovery.")
         return self._builtin_discover()
 
     def _analyze_intent(self, intent: ProjectIntent, facts: HostFacts) -> ProjectIntent:
@@ -265,7 +257,7 @@ class PreflightEngine:
             except (ImportError, AttributeError):
                 continue
 
-        logger.debug("IntentAnalyzer not available – using built-in analysis.")
+        logger.debug("IntentAnalyzer not available - using built-in analysis.")
         return self._builtin_analyze_intent(intent, facts)
 
     def _evaluate_rules(self, facts: HostFacts, intent: ProjectIntent) -> list[RuleFinding]:
@@ -291,14 +283,14 @@ class PreflightEngine:
             except (ImportError, AttributeError):
                 continue
 
-        logger.debug("ResolutionManager not available – using built-in resolution.")
+        logger.debug("ResolutionManager not available - using built-in resolution.")
         return self._builtin_resolution(facts, intent, findings)
 
     def _validate_environment(self, resolution: ResolutionRecord) -> bool:
         """Validate that the resolved environment is functional."""
         env_path = resolution.environment_path
         if not env_path or not Path(env_path).exists():
-            logger.warning("No environment path in resolution – cannot validate.")
+            logger.warning("No environment path in resolution - cannot validate.")
             return False
 
         env_path = Path(env_path)
@@ -374,7 +366,7 @@ class PreflightEngine:
                 else:
                     error = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else "Import failed"
                     results.append((pkg, False, error))
-                    logger.debug("Smoke test FAILED: %s – %s", pkg, error)
+                    logger.debug("Smoke test FAILED: %s - %s", pkg, error)
             except subprocess.TimeoutExpired:
                 results.append((pkg, False, "Import timed out (15s)"))
             except OSError as exc:
@@ -584,7 +576,7 @@ class PreflightEngine:
             resolution.packages_installed = new_resolution.packages_installed
             resolution.notes.extend(new_resolution.notes)
         except ImportError:
-            logger.warning("RepairEngine not available – skipping environment repair.")
+            logger.warning("RepairEngine not available - skipping environment repair.")
 
     # ------------------------------------------------------------------
     # Fact population and normalisation
@@ -760,7 +752,7 @@ class PreflightEngine:
                 with open(path, "rb") as fh:
                     data = tomllib.load(fh)
             except ImportError:
-                logger.debug("No TOML parser available – regex fallback.")
+                logger.debug("No TOML parser available - regex fallback.")
 
         if data:
             proj = data.get("project", {})
@@ -790,7 +782,7 @@ class PreflightEngine:
                     intent.python_version_required = ver_match.group(1)
 
     @staticmethod
-    def _find_env_python(env_path: Path) -> Optional[Path]:
+    def _find_env_python(env_path: Path) -> Path | None:
         """Locate the Python binary inside an environment."""
         for name in ("python3", "python"):
             candidate = env_path / "bin" / name
@@ -799,7 +791,7 @@ class PreflightEngine:
         return None
 
     @staticmethod
-    def _package_to_module(package_name: str) -> Optional[str]:
+    def _package_to_module(package_name: str) -> str | None:
         """Convert a pip package name to its importable module name."""
         mapping: dict[str, str] = {
             "pillow": "PIL",
@@ -825,6 +817,6 @@ def _check_connectivity_quick() -> bool:
         try:
             socket.create_connection((host, 443), timeout=3)
             return True
-        except (socket.timeout, socket.error, OSError):
+        except (TimeoutError, OSError):
             continue
     return False

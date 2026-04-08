@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Optional
-
 
 # Default format for envguard log messages
 _LOG_FORMAT = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
@@ -22,7 +20,7 @@ def get_logger(
     name: str = "envguard",
     level: int = logging.INFO,
     *,
-    handler: Optional[logging.Handler] = None,
+    handler: logging.Handler | None = None,
     propagate: bool = False,
 ) -> logging.Logger:
     """Return a configured :class:`logging.Logger` for the given *name*.
@@ -30,7 +28,7 @@ def get_logger(
     Parameters
     ----------
     name:
-        Logger name – typically the module dotted path (e.g. ``"envguard.rules"``).
+        Logger name - typically the module dotted path (e.g. ``"envguard.rules"``).
     level:
         Minimum log level.  Defaults to ``logging.INFO``.
     handler:

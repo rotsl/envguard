@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""Repair engine – diagnose and fix broken Python environments.
+"""Repair engine - diagnose and fix broken Python environments.
 
 Provides automated repair operations including environment recreation,
 dependency reinstallation, ownership fixes, and Python version switching.
@@ -10,38 +10,27 @@ Every mutation operation records enough state for rollback on failure.
 
 from __future__ import annotations
 
+import contextlib
 import json
-import os
 import re
 import shutil
 import subprocess
 import sys
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+from envguard.logging import get_logger
 from envguard.models import (
-    HostFacts,
-    ProjectIntent,
-    RuleFinding,
-    FindingSeverity,
-    RepairAction,
-    ResolutionRecord,
     AcceleratorTarget,
     Architecture,
     EnvironmentType,
+    HostFacts,
+    ProjectIntent,
+    RepairAction,
+    ResolutionRecord,
+    RuleFinding,
 )
-from envguard.exceptions import (
-    CudaNotSupportedOnMacosError,
-    IncompatibleWheelError,
-    DependencyConflictError,
-    BrokenEnvironmentError,
-    PlatformNotSupportedError,
-    RepairError,
-    EnvironmentCreationError,
-)
-from envguard.logging import get_logger
 from envguard.rules import RulesEngine
 
 logger = get_logger("envguard.repair")
@@ -65,14 +54,14 @@ class RepairEngine:
         self,
         project_dir: Path,
         facts: HostFacts,
-        intent: Optional[ProjectIntent] = None,
+        intent: ProjectIntent | None = None,
     ) -> None:
         self._project_dir = Path(project_dir)
         self._facts = facts
         self._intent = intent
-        self._backup_path: Optional[Path] = None
+        self._backup_path: Path | None = None
         self._repair_log: list[str] = []
-        self._env_path: Optional[Path] = None
+        self._env_path: Path | None = None
 
         if intent is None:
             self._intent = self._discover_intent()
@@ -359,8 +348,7 @@ class RepairEngine:
         if conda_installable:
             try:
                 result = subprocess.run(
-                    ["conda", "install", "-y", "--name",
-                     self._project_dir.name] + conda_installable,
+                    ["conda", "install", "-y", "--name", self._project_dir.name, *conda_installable],
                     capture_output=True, text=True, timeout=300,
                 )
                 if result.returncode != 0:
@@ -373,8 +361,7 @@ class RepairEngine:
         # Reinstall remaining via pip --no-deps
         if pip_only:
             try:
-                pip_args = [str(python_bin), "-m", "pip", "install",
-                            "--no-deps"] + pip_only
+                pip_args = [str(python_bin), "-m", "pip", "install", "--no-deps", *pip_only]
                 result = subprocess.run(
                     pip_args, capture_output=True, text=True, timeout=300,
                 )
@@ -830,14 +817,12 @@ class RepairEngine:
         # Upgrade pip
         new_python = self._find_env_python(env_path)
         if new_python:
-            try:
+            with contextlib.suppress(subprocess.TimeoutExpired, OSError):
                 subprocess.run(
                     [str(new_python), "-m", "pip", "install",
                      "--upgrade", "pip", "--quiet"],
                     capture_output=True, text=True, timeout=60,
                 )
-            except (subprocess.TimeoutExpired, OSError):
-                pass
 
         logger.info("venv created at '%s'", env_path)
         return True
@@ -906,7 +891,7 @@ class RepairEngine:
 
         try:
             result = subprocess.run(
-                [str(python_bin), "-m", "pip", "install"] + all_deps,
+                [str(python_bin), "-m", "pip", "install", *all_deps],
                 capture_output=True, text=True, timeout=600,
             )
             if result.returncode != 0:
@@ -1010,15 +995,14 @@ class RepairEngine:
 
     def _repair_recommend_alternative(self, finding: RuleFinding) -> bool:
         """Handle RECOMMEND_ALTERNATIVE."""
-        if finding.rule_id == "CUDA_ON_MACOS":
-            if self._intent:
-                self._intent.requires_cuda = False
-                self._intent.has_cuda_requirements = False
-                self._intent.accelerator_target = AcceleratorTarget.MPS
-                self._intent.has_mps_requirements = True
-                self._intent.requires_mps = True
-                logger.info("Updated intent: CUDA -> MPS")
-                return True
+        if finding.rule_id == "CUDA_ON_MACOS" and self._intent:
+            self._intent.requires_cuda = False
+            self._intent.has_cuda_requirements = False
+            self._intent.accelerator_target = AcceleratorTarget.MPS
+            self._intent.has_mps_requirements = True
+            self._intent.requires_mps = True
+            logger.info("Updated intent: CUDA -> MPS")
+            return True
 
         recommendation = self.recommend_alternative(finding)
         logger.info("Recommendation for %s: %s", finding.rule_id, recommendation)
@@ -1065,7 +1049,7 @@ class RepairEngine:
 
         try:
             result = subprocess.run(
-                [str(python_bin), "-m", "pip", "install"] + missing,
+                [str(python_bin), "-m", "pip", "install", *missing],
                 capture_output=True, text=True, timeout=300,
             )
             if result.returncode == 0:
@@ -1132,8 +1116,7 @@ class RepairEngine:
 
         try:
             result = subprocess.run(
-                [str(python_bin), "-m", "pip", "install",
-                 "--no-binary", ":all:"] + packages,
+                [str(python_bin), "-m", "pip", "install", "--no-binary", ":all:", *packages],
                 capture_output=True, text=True, timeout=600,
             )
             return result.returncode == 0
@@ -1226,7 +1209,7 @@ class RepairEngine:
                 deps.append(line)
         return deps
 
-    def _infer_env_path(self) -> Optional[Path]:
+    def _infer_env_path(self) -> Path | None:
         """Infer the environment path from project directory."""
         candidates = [
             self._project_dir / ".venv",
@@ -1245,7 +1228,7 @@ class RepairEngine:
         return self._project_dir / ".venv"
 
     @staticmethod
-    def _find_env_python(env_path: Path) -> Optional[Path]:
+    def _find_env_python(env_path: Path) -> Path | None:
         """Find the Python binary in an environment."""
         for name in ("python3", "python"):
             candidate = env_path / "bin" / name
@@ -1278,7 +1261,7 @@ class RepairEngine:
         return (env_path / "conda-meta").is_dir()
 
     @staticmethod
-    def _find_conda_env(env_name: str) -> Optional[Path]:
+    def _find_conda_env(env_name: str) -> Path | None:
         """Find the path to a conda environment by name."""
         try:
             result = subprocess.run(
@@ -1296,7 +1279,7 @@ class RepairEngine:
         return None
 
     @staticmethod
-    def _find_python_version(version: str) -> Optional[Path]:
+    def _find_python_version(version: str) -> Path | None:
         """Find a Python binary for a specific version."""
         # pyenv
         try:
@@ -1331,7 +1314,7 @@ class RepairEngine:
         return None
 
     @staticmethod
-    def _list_installed(python_bin: Path) -> Optional[set[str]]:
+    def _list_installed(python_bin: Path) -> set[str] | None:
         """List installed packages using pip."""
         try:
             result = subprocess.run(

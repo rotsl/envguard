@@ -3,10 +3,10 @@
 
 """Report generation: JSON serialization and health reporting."""
 
-from envguard.reports.json_report import JSONReportWriter
 from envguard.reports.health import HealthReporter
+from envguard.reports.json_report import JSONReportWriter
 
 __all__ = [
-    "JSONReportWriter",
     "HealthReporter",
+    "JSONReportWriter",
 ]

@@ -18,14 +18,11 @@ import socket
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 from envguard.exceptions import (
-    ArchitectureError,
     EnvguardError,
     NetworkUnavailableError,
     SubprocessTimeoutError,
-    XcodeError,
 )
 from envguard.logging import get_logger
 from envguard.models import Architecture, HostFacts, ShellType
@@ -55,16 +52,16 @@ def _run(
             text=True,
             timeout=timeout,
         )
-    except FileNotFoundError:
-        raise EnvguardError(f"Command not found: {' '.join(cmd)}")
-    except subprocess.TimeoutExpired:
+    except FileNotFoundError as exc:
+        raise EnvguardError(f"Command not found: {' '.join(cmd)}") from exc
+    except subprocess.TimeoutExpired as exc:
         raise SubprocessTimeoutError(
             f"Command timed out after {timeout}s: {' '.join(cmd)}"
-        )
+        ) from exc
     except OSError as exc:
         raise EnvguardError(
             f"OS error running {' '.join(cmd)}: {exc}"
-        )
+        ) from exc
 
 
 # ── HostDetector ───────────────────────────────────────────────────────────
@@ -83,7 +80,7 @@ class HostDetector:
     # Public entry points
     # ------------------------------------------------------------------ #
 
-    def detect_all(self, project_dir: Optional[Path] = None) -> HostFacts:
+    def detect_all(self, project_dir: Path | None = None) -> HostFacts:
         """Orchestrate all detection methods and return complete HostFacts.
 
         Args:
@@ -151,8 +148,8 @@ class HostDetector:
                      facts.os_name, facts.architecture.value, facts.python_version)
         return facts
 
-    def gather_facts(self, project_dir: Optional[Path] = None) -> HostFacts:
-        """Alias for :meth:`detect_all` – the main entry point."""
+    def gather_facts(self, project_dir: Path | None = None) -> HostFacts:
+        """Alias for :meth:`detect_all` - the main entry point."""
         return self.detect_all(project_dir)
 
     # ------------------------------------------------------------------ #
@@ -324,8 +321,8 @@ class HostDetector:
 
         try:
             result = mapping[shell_name]
-        except KeyError:
-            raise EnvguardError(f"Unknown shell: {shell_name}")
+        except KeyError as exc:
+            raise EnvguardError(f"Unknown shell: {shell_name}") from exc
 
         logger.debug("Shell detected: %s (%s)", result.value, shell_path)
         return result
@@ -359,7 +356,7 @@ class HostDetector:
             logger.warning("Xcode CLI check failed: %s", exc)
             return False
 
-    def detect_network(self) -> Optional[bool]:
+    def detect_network(self) -> bool | None:
         """Check network connectivity by attempting to reach pypi.org.
 
         Uses a plain TCP socket connection with a 5-second timeout.
@@ -384,7 +381,7 @@ class HostDetector:
             return False
         except OSError as exc:
             # Connection refused, DNS failure, etc.
-            logger.debug("Network: could not reach pypi.org – %s", exc)
+            logger.debug("Network: could not reach pypi.org - %s", exc)
             return False
         except Exception as exc:
             raise NetworkUnavailableError(f"Unexpected network check error: {exc}") from exc
@@ -404,7 +401,7 @@ class HostDetector:
         logger.debug("User: %s, Home: %s", username, home)
         return username, home
 
-    def detect_permissions(self, project_dir: Optional[Path]) -> dict:
+    def detect_permissions(self, project_dir: Path | None) -> dict:
         """Check key permission statuses.
 
         Args:
@@ -461,7 +458,7 @@ class HostDetector:
 # ── Convenience function ───────────────────────────────────────────────────
 
 
-def detect_host(project_dir: Optional[Path] = None) -> HostFacts:
+def detect_host(project_dir: Path | None = None) -> HostFacts:
     """Detect the current host environment and return HostFacts.
 
     This is a convenience wrapper around :class:`HostDetector`.

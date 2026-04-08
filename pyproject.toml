@@ -89,7 +89,10 @@ select = [
     "RUF", # ruff-specific rules
 ]
 ignore = [
-    "E501", # line too long (handled by formatter)
+    "E501",   # line too long (handled by formatter)
+    "B008",   # typer.Argument/Option calls in defaults are intentional (Typer pattern)
+    "SIM102", # nested if statements -- readability preference
+    "SIM103", # return negated condition -- readability preference
 ]
 
 [tool.ruff.lint.isort]

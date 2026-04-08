@@ -7,9 +7,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-from typing import Dict, List, Optional
 
-from envguard.exceptions import XcodeError, SubprocessTimeoutError
 from envguard.logging import get_logger
 
 logger = get_logger(__name__)
@@ -44,7 +42,7 @@ class XcodeChecker:
         return "Xcode.app" in path
 
     @classmethod
-    def get_path(cls) -> Optional[str]:
+    def get_path(cls) -> str | None:
         """Return the developer tools path reported by ``xcode-select -p``.
 
         Returns:
@@ -104,7 +102,7 @@ class XcodeChecker:
         return True
 
     @classmethod
-    def get_version(cls) -> Optional[str]:
+    def get_version(cls) -> str | None:
         """Return the Xcode version string via ``xcodebuild -version``.
 
         Returns:
@@ -150,7 +148,7 @@ class XcodeChecker:
     # ------------------------------------------------------------------
 
     @classmethod
-    def check_build_tools(cls) -> Dict[str, object]:
+    def check_build_tools(cls) -> dict[str, object]:
         """Run all build-tool checks and return a consolidated result.
 
         Returns:
@@ -177,15 +175,15 @@ class XcodeChecker:
         }
 
     @classmethod
-    def verify_source_build_prerequisites(cls) -> List[str]:
+    def verify_source_build_prerequisites(cls) -> list[str]:
         """Check for tools typically required to build Python from source.
 
         Probes for the following on ``PATH``:
 
-        - ``make`` – build driver
-        - ``gcc`` / ``cc`` – C compiler
-        - ``clang`` – LLVM compiler (default on macOS)
-        - ``git`` – version control (often needed for CPython checkouts)
+        - ``make`` - build driver
+        - ``gcc`` / ``cc`` - C compiler
+        - ``clang`` - LLVM compiler (default on macOS)
+        - ``git`` - version control (often needed for CPython checkouts)
 
         Returns:
             A list of missing tool names.  An empty list means all
@@ -195,7 +193,7 @@ class XcodeChecker:
         # cc is a common symlink; check it as a fallback for gcc
         fallback_map = {"gcc": "cc"}
 
-        missing: List[str] = []
+        missing: list[str] = []
 
         for tool in required_tools:
             found = shutil.which(tool) is not None

@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""JSON report writer – serialize envguard data models to JSON files."""
+"""JSON report writer - serialize envguard data models to JSON files."""
 
 from __future__ import annotations
 
+import contextlib
 import json
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
     from envguard.logging import get_logger
@@ -62,10 +63,8 @@ def _to_dict(obj: Any) -> dict[str, Any]:
         for attr in dir(obj):
             if attr.startswith("_"):
                 continue
-            try:
+            with contextlib.suppress(Exception):
                 out[attr] = getattr(obj, attr)
-            except Exception:
-                pass
         return _serialize(out)
 
 
@@ -90,7 +89,7 @@ class JSONReportWriter:
     def write_host_report(
         self,
         facts: Any,
-        path: Optional[Path] = None,
+        path: Path | None = None,
     ) -> dict[str, Any]:
         """Serialize :class:`~envguard.models.HostFacts` to JSON.
 
@@ -115,7 +114,7 @@ class JSONReportWriter:
     def write_project_report(
         self,
         intent: Any,
-        path: Optional[Path] = None,
+        path: Path | None = None,
     ) -> dict[str, Any]:
         """Serialize :class:`~envguard.models.ProjectIntent` to JSON.
 
@@ -140,7 +139,7 @@ class JSONReportWriter:
     def write_preflight_report(
         self,
         result: Any,
-        path: Optional[Path] = None,
+        path: Path | None = None,
     ) -> dict[str, Any]:
         """Serialize :class:`~envguard.models.PreflightResult` to JSON.
 
@@ -165,7 +164,7 @@ class JSONReportWriter:
     def write_health_report(
         self,
         report: Any,
-        path: Optional[Path] = None,
+        path: Path | None = None,
     ) -> dict[str, Any]:
         """Serialize :class:`~envguard.models.HealthReport` to JSON.
 
@@ -190,7 +189,7 @@ class JSONReportWriter:
     def write_repair_report(
         self,
         resolution: Any,
-        path: Optional[Path] = None,
+        path: Path | None = None,
     ) -> dict[str, Any]:
         """Serialize :class:`~envguard.models.ResolutionRecord` (repair) to JSON.
 
@@ -215,7 +214,7 @@ class JSONReportWriter:
     def write_update_report(
         self,
         check: Any,
-        path: Optional[Path] = None,
+        path: Path | None = None,
     ) -> dict[str, Any]:
         """Serialize an update check result to JSON.
 

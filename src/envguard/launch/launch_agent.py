@@ -5,12 +5,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
-import shutil
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional
 
 try:
     from envguard.logging import get_logger
@@ -112,10 +111,10 @@ class LaunchAgentManager:
             str(log_dir / "update-stderr.log"),
         )
 
-        # RunAtLoad – run once immediately on load
+        # RunAtLoad - run once immediately on load
         _add_key_true(dict_el, "RunAtLoad")
 
-        # EnvironmentVariables – set PATH so envguard can be found
+        # EnvironmentVariables - set PATH so envguard can be found
         env_dict = ET.SubElement(dict_el, "dict")
         ET.SubElement(env_dict, "key").text = "PATH"
         current_path = os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin")
@@ -222,8 +221,8 @@ class LaunchAgentManager:
         installed = self.is_installed()
         loaded = self._launchctl_is_loaded(self.BUNDLE_ID) if installed else False
 
-        pid: Optional[int] = None
-        exit_status: Optional[int] = None
+        pid: int | None = None
+        exit_status: int | None = None
 
         if loaded:
             pid, exit_status = self._launchctl_get_service_info(self.BUNDLE_ID)
@@ -269,7 +268,7 @@ class LaunchAgentManager:
         ):
             try:
                 proc = subprocess.run(
-                    ["launchctl"] + args,
+                    ["launchctl", *args],
                     capture_output=True,
                     text=True,
                     timeout=15,
@@ -296,7 +295,7 @@ class LaunchAgentManager:
         ):
             try:
                 proc = subprocess.run(
-                    ["launchctl"] + args,
+                    ["launchctl", *args],
                     capture_output=True,
                     text=True,
                     timeout=15,
@@ -332,7 +331,7 @@ class LaunchAgentManager:
             return False
 
     @staticmethod
-    def _launchctl_get_service_info(bundle_id: str) -> tuple[Optional[int], Optional[int]]:
+    def _launchctl_get_service_info(bundle_id: str) -> tuple[int | None, int | None]:
         """Get PID and exit status for a loaded service.
 
         Returns:
@@ -349,18 +348,16 @@ class LaunchAgentManager:
             if proc.returncode != 0:
                 return None, None
 
-            pid: Optional[int] = None
-            exit_status: Optional[int] = None
+            pid: int | None = None
+            exit_status: int | None = None
 
             for line in proc.stdout.splitlines():
                 line = line.strip()
                 if line.startswith("pid"):
                     # Format: "pid = 12345"
                     _, _, val = line.partition("=")
-                    try:
+                    with contextlib.suppress(ValueError):
                         pid = int(val.strip())
-                    except ValueError:
-                        pass
                 if "status" in line.lower() and "exit" in line.lower():
                     # Try to extract exit code
                     for token in line.split():

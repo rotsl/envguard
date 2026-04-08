@@ -8,12 +8,9 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional
 
-from envguard.macos.paths import MacPaths
-from envguard.models import PermissionStatus
-from envguard.exceptions import InstallationError
 from envguard.logging import get_logger
+from envguard.macos.paths import MacPaths
 
 logger = get_logger(__name__)
 
@@ -36,7 +33,7 @@ class SystemInstaller:
 
     def __init__(
         self,
-        prefix: Optional[Path] = None,
+        prefix: Path | None = None,
         user_level: bool = True,
     ) -> None:
         self._user_level = user_level
@@ -74,7 +71,7 @@ class SystemInstaller:
         """
         return self._prefix
 
-    def check_install_location(self) -> Dict[str, object]:
+    def check_install_location(self) -> dict[str, object]:
         """Inspect the installation location and report its status.
 
         Returns:
@@ -201,7 +198,7 @@ class SystemInstaller:
             logger.error("OS error uninstalling from %s: %s", self._prefix, exc)
             return False
 
-    def verify_installation(self) -> Dict[str, object]:
+    def verify_installation(self) -> dict[str, object]:
         """Verify the integrity of the envguard installation at the prefix.
 
         Returns:
@@ -230,8 +227,8 @@ class SystemInstaller:
             except OSError:
                 marker_valid = False
 
-        subdirs_present: List[str] = []
-        missing_subdirs: List[str] = []
+        subdirs_present: list[str] = []
+        missing_subdirs: list[str] = []
         for name in expected_subdirs:
             sub = self._prefix / name
             if sub.is_dir():
@@ -287,7 +284,6 @@ class SystemInstaller:
                 return False
             if mode & 0o020 and stat_info.st_gid in os.getgroups():  # group-write
                 return False
-
             return True
 
         except OSError as exc:
@@ -297,7 +293,7 @@ class SystemInstaller:
                 self._prefix
             ).startswith("/opt")
 
-    def get_required_privileges(self) -> List[str]:
+    def get_required_privileges(self) -> list[str]:
         """Return a human-readable list of privileges that may be required.
 
         Returns:
@@ -305,7 +301,7 @@ class SystemInstaller:
             privileges are required.
         """
         location = self.check_install_location()
-        privileges: List[str] = []
+        privileges: list[str] = []
 
         if location["requires_privilege"]:
             privileges.append(

@@ -6,10 +6,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import ClassVar, Dict, List
+from typing import ClassVar
 
-from envguard.models import ShellType
 from envguard.logging import get_logger
+from envguard.models import ShellType
 
 logger = get_logger(__name__)
 
@@ -55,7 +55,7 @@ class MacPaths:
     # ------------------------------------------------------------------
 
     @classmethod
-    def shell_rc_candidates(cls) -> Dict[ShellType, List[str]]:
+    def shell_rc_candidates(cls) -> dict[ShellType, list[str]]:
         """Return a mapping of shell types to their candidate rc files.
 
         Returns:
@@ -75,13 +75,13 @@ class MacPaths:
     # ------------------------------------------------------------------
 
     @classmethod
-    def ensure_dirs(cls) -> List[Path]:
+    def ensure_dirs(cls) -> list[Path]:
         """Create all required envguard directories that do not yet exist.
 
         Returns:
             List of directories that were created (or already existed).
         """
-        dirs_to_ensure: List[Path] = [
+        dirs_to_ensure: list[Path] = [
             cls.user_config_dir,
             cls.user_state_dir,
             cls.user_log_dir,
@@ -90,7 +90,7 @@ class MacPaths:
             cls.user_install_prefix,
         ]
 
-        created: List[Path] = []
+        created: list[Path] = []
         for directory in dirs_to_ensure:
             try:
                 directory.mkdir(parents=True, exist_ok=True)

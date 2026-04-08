@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Rohan R. All rights reserved.
 
-"""State manager – persistent project and global state for envguard."""
+"""State manager - persistent project and global state for envguard."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import json
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
     from envguard.logging import get_logger
@@ -83,7 +83,7 @@ class StateManager:
     # ------------------------------------------------------------------
 
     @classmethod
-    def load_resolution(cls, project_dir: Path) -> Optional[dict[str, Any]]:
+    def load_resolution(cls, project_dir: Path) -> dict[str, Any] | None:
         """Load the project ``resolution.json`` file.
 
         Parameters
@@ -127,7 +127,7 @@ class StateManager:
     # ------------------------------------------------------------------
 
     @classmethod
-    def load_intent(cls, project_dir: Path) -> Optional[dict[str, Any]]:
+    def load_intent(cls, project_dir: Path) -> dict[str, Any] | None:
         """Load the project ``intent.json`` file.
 
         Parameters
@@ -171,7 +171,7 @@ class StateManager:
     # ------------------------------------------------------------------
 
     @classmethod
-    def load_health(cls, project_dir: Path) -> Optional[dict[str, Any]]:
+    def load_health(cls, project_dir: Path) -> dict[str, Any] | None:
         """Load the project ``health.json`` file.
 
         Parameters

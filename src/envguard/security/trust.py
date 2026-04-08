@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from envguard.exceptions import TrustError
@@ -29,14 +29,14 @@ class TrustManager:
     """
 
     TRUSTED_KEYS_FILE: str = "trusted_keys.json"
-    KNOWN_TRUSTED_DOMAINS: List[str] = [
+    KNOWN_TRUSTED_DOMAINS: list[str] = [  # noqa: RUF012
         "pypi.org",
         "files.pythonhosted.org",
         "github.com",
         "conda.anaconda.org",
     ]
 
-    def __init__(self, config_dir: Optional[Path] = None) -> None:
+    def __init__(self, config_dir: Path | None = None) -> None:
         if config_dir is not None:
             self._config_dir = Path(config_dir)
         else:
@@ -45,7 +45,7 @@ class TrustManager:
             self._config_dir = MacPaths.user_config_dir
 
         self._keys_file = self._config_dir / self.TRUSTED_KEYS_FILE
-        self._keys: Dict[str, Dict[str, Any]] = {}
+        self._keys: dict[str, dict[str, Any]] = {}
         self._load_keys()
 
     # ------------------------------------------------------------------
@@ -121,7 +121,7 @@ class TrustManager:
     # Key management
     # ------------------------------------------------------------------
 
-    def get_trusted_keys(self) -> List[str]:
+    def get_trusted_keys(self) -> list[str]:
         """Return a list of trusted key IDs.
 
         Returns:
@@ -168,8 +168,8 @@ class TrustManager:
     def verify_source(
         self,
         url: str,
-        artifact_hash: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        artifact_hash: str | None = None,
+    ) -> dict[str, Any]:
         """Verify that a package source URL is trustworthy.
 
         Args:
@@ -220,7 +220,7 @@ class TrustManager:
             "recommendation": recommendation,
         }
 
-    def validate_update_source(self, manifest_url: str) -> Dict[str, Any]:
+    def validate_update_source(self, manifest_url: str) -> dict[str, Any]:
         """Validate an update manifest URL for trustworthiness.
 
         Args:
@@ -236,7 +236,7 @@ class TrustManager:
             - ``scheme`` (*str*): URL scheme (should be ``https``).
             - ``issues`` (*list[str]*): Any issues detected.
         """
-        issues: List[str] = []
+        issues: list[str] = []
 
         try:
             parsed = urlparse(manifest_url)
@@ -280,7 +280,7 @@ class TrustManager:
     # Reporting
     # ------------------------------------------------------------------
 
-    def get_trust_report(self) -> Dict[str, Any]:
+    def get_trust_report(self) -> dict[str, Any]:
         """Return a comprehensive trust report.
 
         Returns:

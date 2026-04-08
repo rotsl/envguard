@@ -10,11 +10,10 @@ import shutil
 import struct
 import subprocess
 import sys
-from typing import Dict, Optional
 
-from envguard.models import Architecture
 from envguard.exceptions import ArchitectureError, SubprocessTimeoutError
 from envguard.logging import get_logger
+from envguard.models import Architecture
 
 logger = get_logger(__name__)
 
@@ -158,7 +157,7 @@ class RosettaDetector:
     # ------------------------------------------------------------------
 
     @classmethod
-    def classify_rosetta_risk(cls, python_path: str) -> Dict[str, object]:
+    def classify_rosetta_risk(cls, python_path: str) -> dict[str, object]:
         """Classify the Rosetta 2 compatibility risk for a Python interpreter.
 
         Args:
@@ -232,7 +231,7 @@ class RosettaDetector:
     # ------------------------------------------------------------------
 
     @classmethod
-    def get_universal_binary_support(cls) -> Dict[str, object]:
+    def get_universal_binary_support(cls) -> dict[str, object]:
         """Check whether the current Python binary is a universal (fat) binary.
 
         Reads the first few bytes of ``sys.executable`` to inspect the Mach-O
@@ -278,7 +277,7 @@ class RosettaDetector:
                         else:
                             supported_archs.append(f"unknown({cputype:#x})")
             else:
-                # Not a fat binary – single architecture.
+                # Not a fat binary - single architecture.
                 supported_archs.append(cls.detect_architecture().value)
 
         except (OSError, struct.error) as exc:
