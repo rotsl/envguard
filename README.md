@@ -2,14 +2,12 @@
 
 **macOS-first Python environment orchestration framework**
 
+[![PyPI version](https://img.shields.io/pypi/v/envguard-tool)](https://pypi.org/project/envguard-tool/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![macOS](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-informational.svg)](#platform-support)
-[![PyPI version](https://img.shields.io/pypi/v/envguard-tool)](https://pypi.org/project/envguard-tool/)
+[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-informational.svg)](#platform-support)
 [![CI](https://github.com/rotsl/envguard/actions/workflows/ci.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/ci.yml)
 [![Lint](https://github.com/rotsl/envguard/actions/workflows/lint.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/lint.yml)
-
-
 
 ---
 
@@ -70,6 +68,10 @@ If anything is wrong, execution is **blocked** with a clear, actionable error me
 | **Project discovery** | Scans `pyproject.toml`, `requirements.txt`, `setup.py`, `Pipfile`, `environment.yml`, `poetry.lock`, `.python-version`, wheelhouse dirs |
 | **Intent analysis** | Infers environment type (venv/conda/pipenv/poetry), Python version, accelerator targets (CPU/MPS/CUDA) |
 | **Rules engine** | 15+ preflight rules: platform, architecture, Python version, CUDA detection, MPS, Rosetta, wheels, pip/conda ownership, permissions, network |
+| **Dependency resolution** | BFS resolution via PyPI JSON API; supports uv, pip, and conda backends |
+| **Package installation** | Install into venv/uv/conda/mamba environments with backend auto-detection |
+| **Lock file management** | Generate, sync, and check `envguard.lock` (TOML, SHA-256 content hash) |
+| **Publishing** | Build sdist + wheel via `python -m build`; upload via twine or direct API |
 | **Automated repair** | Recreate environments, fix mixed pip/conda ownership, switch Python versions, rebuild native extensions |
 | **Managed execution** | Every `envguard run` is preceded by the full preflight pipeline |
 | **Shell integration** | Optional zsh/bash hooks |
@@ -93,27 +95,19 @@ If anything is wrong, execution is **blocked** with a clear, actionable error me
 
 | | |
 |---|---|
-| **Package name** | `envguard-tool` |
+| **Package name** | [`envguard-tool`](https://pypi.org/project/envguard-tool/) |
 | **CLI command** | `envguard` |
-| **Version** | `1.0.1` |
-| **Registry** | [Test PyPI](https://test.pypi.org/project/envguard-tool/) |
-| **Python** | 3.10+ |
+| **Latest version** | `1.0.1` |
+| **Python** | 3.10, 3.11, 3.12 |
 | **License** | Apache 2.0 |
 
 ```bash
-# Install from Test PyPI
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ envguard-tool
-
-# Install a specific version
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ envguard-tool==1.0.1
-
-# Once on PyPI (coming soon)
 pip install envguard-tool
 ```
 
-> **Note:** The installable package is named `envguard-tool` on PyPI. The CLI command after installation is `envguard`. This distinction exists because the name `envguard` was already taken on PyPI.
+> The installable package is named `envguard-tool` on PyPI. The CLI command and Python import name are both `envguard`.
 
-The package source lives in [`envg/`](envg/) within this repository. The `envg/` directory is the canonical publishable artifact — its `pyproject.toml`, `README.md`, and source mirror the main project.
+The package source lives in [`envg/`](envg/) within this repository and is automatically published to PyPI on every push to `main` that touches `envg/` (see [`.github/workflows/package.yml`](.github/workflows/package.yml)).
 
 ---
 
@@ -139,11 +133,8 @@ The package source lives in [`envg/`](envg/) within this repository. The `envg/`
 ## Quick Start
 
 ```bash
-# Install from PyPI (package name: envguard-tool, CLI command: envguard)
+# Install (package name: envguard-tool, CLI command: envguard)
 pip install envguard-tool
-
-# Or from Test PyPI
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ envguard-tool
 
 # Initialize your project
 cd /path/to/your/project
@@ -153,6 +144,10 @@ envguard init
 envguard run -- pytest -v
 envguard run -- python train.py
 envguard run -- jupyter lab
+
+# Resolve and lock dependencies
+envguard resolve
+envguard lock generate
 ```
 
 ---
@@ -378,6 +373,8 @@ All findings are collected regardless of severity — only CRITICAL findings blo
 
 ## All Commands
 
+### Environment management
+
 | Command | Description | macOS | Linux |
 |---|---|---|---|
 | `envguard init [DIR]` | Initialize envguard for a project | ✓ | ✓ |
@@ -396,6 +393,32 @@ All findings are collected regardless of severity — only CRITICAL findings blo
 | `envguard uninstall-shell-hooks` | Remove shell integration hooks | ✓ | ✓ |
 | `envguard install-launch-agent` | Install macOS LaunchAgent for auto-updates | ✓ | — |
 | `envguard uninstall-launch-agent` | Remove macOS LaunchAgent | ✓ | — |
+
+### Dependency management
+
+| Command | Description |
+|---|---|
+| `envguard resolve [DIR]` | Resolve project dependencies to pinned versions via PyPI API |
+| `envguard install [PACKAGES...]` | Install packages into the managed environment |
+| `envguard install --from-lock` | Sync environment exactly to `envguard.lock` |
+| `envguard install --dev` | Include dev/optional dependency groups |
+
+### Lock file
+
+| Command | Description |
+|---|---|
+| `envguard lock generate` | Resolve and write `envguard.lock` |
+| `envguard lock update [--package NAME]` | Re-resolve and refresh the lock file (or a single package) |
+| `envguard lock sync` | Install all packages pinned in `envguard.lock` |
+| `envguard lock check` | Check if `envguard.lock` is up-to-date (exit 13 if stale) |
+
+### Publishing
+
+| Command | Description |
+|---|---|
+| `envguard publish [--dry-run]` | Build and upload to PyPI |
+| `envguard publish --skip-build` | Upload existing `dist/` artifacts |
+| `envguard publish --repository <url>` | Publish to a custom registry URL |
 
 All commands support `--json` / `-j` for machine-readable output.
 
@@ -736,6 +759,8 @@ Snapshots capture: `created_at`, `envguard_version`, `python_version`, `project_
 | `10` | `EXIT_UPDATE_AVAILABLE` | Update is available |
 | `11` | `EXIT_ALREADY_UP_TO_DATE` | Already at latest version |
 | `12` | `EXIT_ROLLBACK_FAILED` | Rollback operation failed |
+| `13` | `EXIT_LOCK_STALE` | Lock file is missing or out of date |
+| `14` | `EXIT_PUBLISH_FAILED` | Package publish failed |
 
 Exit code 9 is intentionally skipped to avoid confusion with the Unix `SIGKILL` convention.
 
@@ -797,20 +822,36 @@ envguard/
 ├── src/envguard/
 │   ├── __init__.py          # Package metadata, exit codes, shared utilities
 │   ├── __main__.py          # python -m envguard entry point
-│   ├── cli.py               # Typer CLI — 16 commands
-│   ├── models.py            # Data models: HostFacts, ProjectIntent, RuleFinding, PreflightResult, …
-│   ├── exceptions.py        # 18 custom exception classes
+│   ├── cli.py               # Typer CLI — 25 commands across 6 groups
+│   ├── models.py            # Data models: HostFacts, ProjectIntent, RuleFinding, ResolvedPackage, LockFile, …
+│   ├── exceptions.py        # Custom exception hierarchy (EnvguardError and 18 subclasses)
 │   ├── detect.py            # HostDetector — OS, arch, Python, shell, network, permissions
 │   ├── doctor.py            # 10 diagnostic checks
 │   ├── rules.py             # RulesEngine — 15+ preflight rules
 │   ├── preflight.py         # PreflightEngine — 9-step pipeline orchestration
 │   ├── repair.py            # RepairEngine — automated environment repair
+│   ├── installer.py         # Installer — install/uninstall via uv/pip/conda backend
+│   ├── state.py             # StateManager — atomic JSON state persistence
 │   ├── logging.py           # Structured logging via get_logger()
 │   ├── project/
 │   │   ├── discovery.py     # Project file scanning → ProjectIntent
 │   │   ├── intent.py        # Intent analysis (accelerators, compatibility, recommendations)
 │   │   ├── resolution.py    # ResolutionManager → ResolutionRecord
 │   │   └── lifecycle.py     # Full lifecycle orchestration
+│   ├── resolver/
+│   │   ├── base.py          # BaseResolver interface
+│   │   ├── pypi_resolver.py # PyPIResolver — BFS dependency resolution via PyPI JSON API
+│   │   ├── uv_backend.py    # UvBackend — wraps uv pip compile/install
+│   │   ├── pip_backend.py   # PipBackend — pip-based resolution
+│   │   ├── conda_backend.py # CondaBackend — conda/mamba resolution
+│   │   ├── inference.py     # infer_requirements() and infer_sources() from project files
+│   │   ├── markers.py       # PEP 508 environment marker evaluation
+│   │   └── wheelcheck.py    # Wheel platform/arch compatibility checks
+│   ├── lock/
+│   │   └── manager.py       # LockManager — generate, read, write, sync envguard.lock
+│   ├── publish/
+│   │   ├── builder.py       # Builder — python -m build (sdist + wheel)
+│   │   └── uploader.py      # Uploader — twine upload with urllib fallback
 │   ├── macos/
 │   │   ├── permissions.py   # macOS permission checking (LaunchAgent, RC write, subprocess)
 │   │   ├── paths.py         # macOS-specific paths
@@ -820,11 +861,6 @@ envguard/
 │   ├── security/
 │   │   ├── signatures.py    # SHA-256/384/512 hash computation
 │   │   └── trust.py         # Trust boundary evaluation
-│   ├── resolver/
-│   │   ├── base.py          # Resolver interface
-│   │   ├── conda_backend.py # conda resolution
-│   │   ├── inference.py     # Environment inference
-│   │   └── wheelcheck.py    # Wheel compatibility checks
 │   ├── update/
 │   │   ├── manifest.py      # Update manifest parsing and version comparison
 │   │   ├── updater.py       # UpdateManager — fetch, verify, stage, apply
