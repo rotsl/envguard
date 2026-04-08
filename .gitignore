@@ -153,3 +153,6 @@ guardenv/
 
 # envguard internal usage guide (not for distribution)
 envguard-usage-guide.md
+
+# scratch/test projects
+envg/
