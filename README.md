@@ -8,7 +8,7 @@
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-informational.svg)](#platform-support)
 [![CI](https://github.com/rotsl/envguard/actions/workflows/ci.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/ci.yml)
 [![Lint](https://github.com/rotsl/envguard/actions/workflows/lint.yml/badge.svg)](https://github.com/rotsl/envguard/actions/workflows/lint.yml)
-
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/envguard-tool?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/envguard-tool)
 [![DOI](https://zenodo.org/badge/1203981698.svg)](https://doi.org/10.5281/zenodo.19473644)
 
 ---
