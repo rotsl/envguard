@@ -151,6 +151,8 @@ Icon
 # envguard dev venv (created by: python3 -m venv guardenv)
 guardenv/
 
+guardvenv/
+
 # envguard internal usage guide (not for distribution)
 envguard-usage-guide.md
 
